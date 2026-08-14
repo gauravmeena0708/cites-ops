@@ -30,7 +30,7 @@ def main():
 
     # Command: chat-kb
     cmd_chat = subparsers.add_parser("chat-kb", help="Extract technical knowledge & mask PII from WhatsApp chat exports.")
-    cmd_chat.add_argument("chat_file", type=str, help="Path to WhatsApp chat export (.txt or .zip).")
+    cmd_chat.add_argument("chat_files", nargs="+", type=str, help="One or more WhatsApp chat export paths (.txt or .zip).")
     cmd_chat.add_argument("--issues", type=str, help="Optional tracker CSV to cross-reference ticket IDs.")
     cmd_chat.add_argument("--date", "-d", type=str, default=str(date.today()), help="Report date (YYYY-MM-DD).")
     cmd_chat.add_argument("--output", "-o", type=str, default="Knowledge_Note.docx", help="Path to save Word Knowledge Note (.docx).")
@@ -39,6 +39,7 @@ def main():
     cmd_report = subparsers.add_parser("report", help="Generate the full reporting pack (Excel, PPTX, HTML, Word).")
     cmd_report.add_argument("issues_csv", type=str, help="Path to issue tracker CSV.")
     cmd_report.add_argument("--teams", type=str, help="Optional path to teams.csv for workforce hierarchy mapping.")
+    cmd_report.add_argument("--chats", nargs="*", type=str, help="Optional list of WhatsApp chat exports (.txt or .zip).")
     cmd_report.add_argument("--date", "-d", type=str, default=str(date.today()), help="Report snapshot date.")
     cmd_report.add_argument("--out-dir", "-o", type=str, default="reports", help="Output directory for generated reports.")
 
@@ -83,20 +84,33 @@ def run_classify(args):
         print(f"[OK] Formatted Excel workbook written to {out_xl}")
 
 def run_chat_kb(args):
-    print(f"Parsing chat file {args.chat_file}...")
-    df_chat = ChatParser.parse_file(args.chat_file)
-    print(f"Extracted {len(df_chat)} chat messages.")
+    all_dfs = []
+    for cf in args.chat_files:
+        print(f"Parsing chat file: {cf}...")
+        try:
+            df_part = ChatParser.parse_file(cf)
+            print(f"  Extracted {len(df_part)} messages.")
+            all_dfs.append(df_part)
+        except Exception as e:
+            print(f"  Warning: Failed to parse {cf}: {e}")
+
+    if not all_dfs:
+        print("No chat messages were parsed.")
+        sys.exit(1)
+
+    df_chat = pd.concat(all_dfs, ignore_index=True)
+    print(f"Total chat messages across sources: {len(df_chat):,}")
 
     issue_index = None
     if args.issues:
         _, _, df_issues = IngestValidator.validate_issue_csv(args.issues)
         matcher = EntityMatcher()
         issue_index = matcher.build_issue_index(df_issues)
-        print(f"Built cross-reference index from {len(df_issues)} issues.")
+        print(f"Built cross-reference entity index from {len(df_issues):,} tracker issues.")
 
     extractor = ChatKnowledgeExtractor()
     items = extractor.extract_knowledge_items(df_chat, issue_index)
-    print(f"Extracted {len(items)} technical resolution items.")
+    print(f"Extracted {len(items):,} technical resolution and problem guidance items.")
 
     out_docx = DocxReporter.generate_knowledge_note(items, args.output, note_date=args.date)
     print(f"[OK] Field Office Knowledge Note written to {out_docx}")
@@ -131,17 +145,37 @@ def run_report(args):
     print(f"[OK] HTML Dashboard: {html_path}")
 
     # 4. Government Note
-    top_cats = df_enriched["major_topic_label"].value_counts().head(5).index.tolist()
+    top_cats = df_enriched["major_topic_label"].value_counts().head(6).index.tolist()
     major_items = []
     for cat in top_cats:
-        desc = df_enriched[df_enriched["major_topic_label"] == cat]["category_description"].iloc[0]
+        desc_matches = df_enriched[df_enriched["major_topic_label"] == cat]["category_description"]
+        desc = desc_matches.iloc[0] if not desc_matches.empty else ""
         major_items.append({"title": cat, "description": desc})
 
     docx_path = out_dir / f"Administrative_Note_{args.date}.docx"
     DocxReporter.generate_govt_note(major_items, docx_path, note_date=args.date)
     print(f"[OK] Administrative Note: {docx_path}")
 
-    print(f"\nAll reports successfully generated in: {out_dir.resolve()}")
+    # 5. Knowledge Note (if chats provided)
+    if args.chats:
+        all_dfs = []
+        for cf in args.chats:
+            try:
+                df_part = ChatParser.parse_file(cf)
+                all_dfs.append(df_part)
+            except Exception as e:
+                print(f"  Warning: Could not parse chat {cf}: {e}")
+        if all_dfs:
+            df_chat = pd.concat(all_dfs, ignore_index=True)
+            matcher = EntityMatcher()
+            issue_index = matcher.build_issue_index(df_enriched)
+            extractor = ChatKnowledgeExtractor(matcher)
+            items = extractor.extract_knowledge_items(df_chat, issue_index)
+            kb_path = out_dir / f"Field_Office_Knowledge_Note_{args.date}.docx"
+            DocxReporter.generate_knowledge_note(items, kb_path, note_date=args.date)
+            print(f"[OK] Knowledge Note: {kb_path}")
+
+    print(f"\nAll substantive reports successfully generated in: {out_dir.resolve()}")
 
 def run_workforce(args):
     print(f"Mapping {args.issues_csv} against {args.teams_csv}...")

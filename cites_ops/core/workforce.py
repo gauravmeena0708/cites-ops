@@ -39,6 +39,12 @@ class WorkforceMapper:
                 return group_key
         return "other"
 
+    @staticmethod
+    def _normalize_key(text: Any) -> str:
+        if not text or pd.isna(text):
+            return ""
+        return re.sub(r"[^a-z0-9]", "", str(text).lower()).strip()
+
     def process_workload(
         self,
         df_issues: pd.DataFrame,
@@ -46,6 +52,7 @@ class WorkforceMapper:
     ) -> Dict[str, Any]:
         """
         Merge issues with teams mapping and compute hierarchical workload metrics.
+        Supports normalized fuzzy category matching and multi-category splits.
         """
         issue_cat_col = self.hierarchy_cfg.get("issue_category_column", "Category")
         team_cat_col = self.hierarchy_cfg.get("team_column", "Team")
@@ -60,24 +67,40 @@ class WorkforceMapper:
         issues["_routing_group"] = issues[assigned_col].apply(self.assign_routing_group)
         issues["_is_resolved"] = issues[status_col].astype(str).str.lower().isin(self.resolved_statuses)
         issues["_is_open"] = ~issues["_is_resolved"]
+        issues["_norm_cat"] = issues[issue_cat_col].apply(self._normalize_key)
+
+        # Prepare teams mapping (expand multi-category rows like 'ECR, Employer')
+        team_rows = []
+        for _, r in df_teams.iterrows():
+            raw_teams = str(r.get(team_cat_col, "")).split(",")
+            for t in raw_teams:
+                norm_t = self._normalize_key(t)
+                if norm_t:
+                    row_dict = r.to_dict()
+                    row_dict["_norm_cat"] = norm_t
+                    team_rows.append(row_dict)
+
+        df_teams_expanded = pd.DataFrame(team_rows).drop_duplicates(subset=["_norm_cat"])
 
         # Merge with teams mapping
         merged = issues.merge(
-            df_teams,
-            left_on=issue_cat_col,
-            right_on=team_cat_col,
+            df_teams_expanded,
+            on="_norm_cat",
             how="left",
         )
 
         # Fill missing hierarchy levels
         for lvl in levels:
             if lvl in merged.columns:
-                merged[lvl] = merged[lvl].fillna("Not Specified").astype(str).str.strip()
+                merged[lvl] = merged[lvl].fillna("Ownership Not Mapped").astype(str).str.strip()
             else:
-                merged[lvl] = "Not Specified"
+                merged[lvl] = "Ownership Not Mapped"
 
         # Build recursive hierarchy tree
         tree = self._build_recursive_tree(merged, levels, 0)
+
+        # Unmapped categories
+        unmapped = merged[merged["_norm_cat"].isin(set(issues["_norm_cat"]) - set(df_teams_expanded["_norm_cat"]))][issue_cat_col].unique()
 
         # Compute overall KPIs
         kpis = {
@@ -91,9 +114,7 @@ class WorkforceMapper:
             "kpis": kpis,
             "hierarchy_levels": levels,
             "tree": tree,
-            "unmapped_categories": sorted(
-                list(merged[merged[team_cat_col].isna()][issue_cat_col].unique())
-            ) if team_cat_col in merged.columns else [],
+            "unmapped_categories": sorted(list(unmapped)),
         }
 
     def _build_recursive_tree(

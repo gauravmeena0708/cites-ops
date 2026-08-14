@@ -39,21 +39,38 @@ class IngestValidator:
         cls,
         df: pd.DataFrame,
         as_of_date: Optional[date] = None,
-        date_submitted_col: str = "Date Submitted",
-        date_updated_col: str = "Last Update",
+        date_submitted_col: Optional[str] = None,
+        date_updated_col: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Compute age_days and no_movement_days for each ticket.
+        Automatically finds the best matching column names.
         """
         ref_date = as_of_date or date.today()
         df_out = df.copy()
+
+        # Resolve submission date column
+        sub_col = date_submitted_col
+        if not sub_col or sub_col not in df_out.columns:
+            for candidate in ("Date Submitted", "date_submitted", "Created", "Submission Date", "date_raised"):
+                if candidate in df_out.columns:
+                    sub_col = candidate
+                    break
+
+        # Resolve updated date column
+        upd_col = date_updated_col
+        if not upd_col or upd_col not in df_out.columns:
+            for candidate in ("Last Update", "Updated", "updated", "date_updated", "Last Modified", "Modified"):
+                if candidate in df_out.columns:
+                    upd_col = candidate
+                    break
 
         age_days_list = []
         stale_days_list = []
 
         for _, row in df_out.iterrows():
-            sub_date = parse_date(row.get(date_submitted_col))
-            upd_date = parse_date(row.get(date_updated_col))
+            sub_date = parse_date(row.get(sub_col)) if sub_col else None
+            upd_date = parse_date(row.get(upd_col)) if upd_col else None
 
             age = (ref_date - sub_date).days if sub_date else None
             stale = (ref_date - upd_date).days if upd_date else age
