@@ -1,0 +1,37 @@
+# Default CITES Operations Configuration
+app:
+  name: "CITES Operations Intelligence"
+  version: "1.0.0"
+
+aging_thresholds:
+  stale_days: 7
+  aging_medium_days: 7
+  aging_high_days: 30
+
+hierarchy:
+  # Hierarchy columns from teams.csv in top-down order
+  levels:
+    - "JD(IS)"
+    - "DD(IS)"
+    - "Account handled by"
+  team_column: "Team"
+  issue_category_column: "Category"
+  issue_status_column: "Status"
+  issue_assigned_column: "Assigned To"
+  issue_summary_column: "Summary"
+  issue_description_column: "Description"
+  issue_id_column: "Id"
+  issue_date_submitted_column: "Date Submitted"
+  issue_date_updated_column: "Last Update"
+
+resolved_statuses:
+  - "resolved"
+  - "fixed"
+  - "closed"
+
+open_statuses:
+  - "open"
+  - "assigned"
+  - "new"
+  - "feedback"
+  - "reopened"

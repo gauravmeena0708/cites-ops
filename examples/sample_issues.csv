@@ -1,0 +1,8 @@
+Id,Category,Status,Assigned To,Date Submitted,Last Update,Summary,Description
+0001001,Form-13,assigned,team_epfo_form_13,2026-08-01,2026-08-02,Form-13 Claim not visible at DA level for processing,Claim is inwarded but not visible in Dealing Assistant login inbox for verification.
+0001002,Form-10D,assigned,team_epfo_form_10d,2026-07-20,2026-07-22,Pension calculation mismatch in death case,System showing error Something went wrong in pension calculation for member ID MH/BAN/12345/678.
+0001003,Member,assigned,team_cdac_member,2026-07-15,2026-07-16,Unable to link UAN with Aadhaar due to mismatch,UAN 100123456789 cannot be activated as Aadhaar verification failed.
+0001004,Employer,assigned,team_epfo_employer,2026-08-10,2026-08-11,Invalid password and account blocked for employer,Establishment code DLCPM1234567000 facing 504 gateway timeout and login blocked.
+0001005,Form-19,resolved,team_epfo_form_19,2026-08-05,2026-08-08,Settlement completed successfully,Form 19 final settlement processed and credited to member ledger.
+0001006,DSC/Esign,assigned,team_epfo_dsc,2026-08-03,2026-08-04,Digital signature certificate DSC verification failed,Unable to approve joint declaration due to DSC proxy error at APFC level.
+0001007,VDR and VDR_SPL,assigned,ro.delhi.north,2026-07-10,2026-07-12,Previous service history missing in transfer in,Transfer in from legacy system not reflected in current member ID DL/CPM/999/88.

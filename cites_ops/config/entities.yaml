@@ -1,0 +1,39 @@
+# Entity Extraction and PII Redaction Configuration
+# Add or modify entity patterns without touching Python source code.
+
+entities:
+  uan:
+    label: "UAN (Universal Account Number)"
+    pattern: '\b\d{12}\b'
+    mask: "XXXX-XXXX-{last4}"
+    normalize: "digits"
+
+  grievance_id:
+    label: "Grievance / CPGRAMS ID"
+    pattern: '\b(?:MOLBR|[A-Z]{3,8})/[EF]/\d{4}/\d+\b'
+    mask: "{prefix}/XXXX"
+    normalize: "uppercase"
+
+  member_id:
+    label: "Member ID / Account Number"
+    pattern: '\b[A-Z]{2,}[A-Z0-9]*(?:/[A-Z0-9]+){1,}\b'
+    mask: "{region}/XXXXX/{last4}"
+    normalize: "uppercase"
+
+  tracking_id:
+    label: "Task / Tracking ID"
+    pattern: '\b\d{17,18}\b'
+    mask: "TRK-XXXX-{last4}"
+    normalize: "digits"
+
+  mobile_number:
+    label: "Mobile Number"
+    pattern: '(?:\+91[\-\s]?)?[6-9]\d{9}\b'
+    mask: "+91-XXXXX-{last4}"
+    normalize: "digits"
+
+  email_address:
+    label: "Email Address"
+    pattern: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    mask: "{user_initial}***@{domain}"
+    normalize: "lowercase"

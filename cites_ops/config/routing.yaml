@@ -1,0 +1,23 @@
+# Routing Queue Definition Configuration
+# Map raw 'Assigned To' queue strings into logical routing groups
+
+routing_groups:
+  internal_tech:
+    label: "EPFO Technical Queue"
+    key: "epfo"
+    pattern: '(?i)^team_epfo_.*'
+
+  vendor_tech:
+    label: "CDAC Technical Queue"
+    key: "cdac"
+    pattern: '(?i)^team_cdac_.*'
+
+  field_office:
+    label: "Regional / Field Office Queue"
+    key: "field"
+    pattern: '(?i)^ro\..*'
+
+  other:
+    label: "Other / Unassigned Queue"
+    key: "other"
+    pattern: '.*'

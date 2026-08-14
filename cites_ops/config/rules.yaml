@@ -1,0 +1,343 @@
+version: "issue-categories-v3.2.0"
+
+major_categories:
+  claim_task_visibility_routing:
+    label: "Claim/task is not visible or routed"
+    description: "Claims or workflow tasks are missing from, or not routed to, the expected processing login."
+  record_service_data_availability:
+    label: "Record, service or data availability"
+    description: "Required member, establishment, service-history or transaction data is missing or unavailable."
+  workflow_claim_processing:
+    label: "Workflow actions and claim processing"
+    description: "Workflow actions, inwarding, submission or general processing cannot be completed."
+  eligibility_validation_status:
+    label: "Eligibility, validation and status conflicts"
+    description: "Eligibility rules, duplicate cases, prior settlement states or validations prevent correct processing."
+  financial_benefit_ledger:
+    label: "Financial, benefit and ledger discrepancies"
+    description: "Amounts, benefits, ledgers, payments or reconciliation results are missing, incorrect or failed."
+  document_signing:
+    label: "Document generation and digital signing"
+    description: "Required documents, reports, DSC or eSign actions cannot be generated or completed."
+  identity_kyc_correction:
+    label: "Identity, KYC and data correction"
+    description: "Identity linking, KYC verification or correction of member and case data has failed."
+  access_system_availability:
+    label: "Login, portal and system availability"
+    description: "Authentication, access, portal, module or server availability has failed."
+  legacy_migration_sync:
+    label: "Legacy migration and synchronisation"
+    description: "Legacy records have not migrated or synchronised into the system correctly."
+  other:
+    label: "Other or insufficient detail"
+    description: "The issue text does not yet provide enough stable evidence for a defined problem group."
+
+rules:
+  - rule_id: "C20_PRIOR_SETTLEMENT_STATUS"
+    topic_key: "prior_settlement_status_conflict"
+    major_topic_key: "eligibility_validation_status"
+    label: "Prior settlement/benefit-status conflict"
+    description: "A claim is blocked by an earlier settlement, benefit-taken state, part-payment state, or a related Form-19/Form-10C status."
+    priority: 100
+    patterns:
+      - '(?i)\b(?:part payment|balance payment|less payment|benefit(?:s)? (?:has|have) already been (?:availed|taken)|benefit taken status|revoke(?:d|ing)? benefits?|after (?:the )?settlement of (?:claim |form[- ]?)?19|already settled).{0,140}(?:form[- ]?10c|withdrawal benefit|claim|file|process|restart|release|payment)?'
+      - '(?i)\b(?:form[- ]?10c|withdrawal benefit|claim).{0,140}(?:part payment|balance payment|already settled|benefits? (?:already )?(?:availed|taken)|revoke benefits?|after settlement)'
+
+  - rule_id: "C22_DUPLICATE_CONCURRENT"
+    topic_key: "duplicate_concurrent_claim_conflict"
+    major_topic_key: "eligibility_validation_status"
+    label: "Duplicate/concurrent claim conflict"
+    description: "A duplicate, concurrent, already-pending or multiple-claim/claimant condition blocks or incorrectly permits processing."
+    priority: 98
+    patterns:
+      - '(?i)\b(?:multiple|duplicate|concurrent)\s+(?:claims?|applications?|claimants?|beneficiaries)\b'
+      - '(?i)\b(?:already pending|same form type|ongoing process(?:es)? (?:that )?affect|claim (?:is )?pending at (?:the )?(?:fo|field office))\b'
+
+  - rule_id: "C21_ELIGIBILITY_SERVICE"
+    topic_key: "eligibility_service_conflict"
+    major_topic_key: "eligibility_validation_status"
+    label: "Eligibility/service-condition conflict"
+    description: "Claim eligibility conflicts with age, service length, waiting-period, death-case or benefit-entitlement rules."
+    priority: 96
+    patterns:
+      - '(?i)\b(?:total\s+)?service(?:\s+(?:period|length|tenure))?\s+(?:is|of|being)?\s*(?:more than|less than|over|under|not completed|completed|\d+\s*(?:years?|yrs?|months?))'
+      - '(?i)\b(?:waiting period|age).{0,80}(?:not completed|completed|attained|more than|less than|over|under|\d+\s*(?:years?|yrs?|months?))'
+      - '(?i)\b(?:more than|less than|over|under)\s+\d+\s*(?:years?|yrs?|months?).{0,50}\bservice\b'
+      - '(?i)\b(?:not eligible|ineligible|eligibility (?:error|conflict)|wrong form .{0,40}(?:allowed|filed)|eligible for withdrawal benefit|death away from service)\b'
+
+  - rule_id: "C25_IDENTITY_KYC"
+    topic_key: "identity_kyc_linking_failure"
+    major_topic_key: "identity_kyc_correction"
+    label: "UAN/member-ID/KYC linking or verification has failed"
+    description: "UAN or Member ID linking/activation, Aadhaar/PAN seeding or verification, or identity-set validation has failed."
+    priority: 94
+    patterns:
+      - '(?i)\b(?:uan|member id|mid).{0,100}(?:unable to link|not\s+(?:linked|linking|activated|activating|verified|belong)|link .{0,30}not (?:working|functioning)|activation (?:issue|failed)|no member record found)'
+      - '(?i)\b(?:aadhaar|aadhar|pan|kyc).{0,100}(?:(?:seeding|verification|linking)\s+not\s+(?:done|working)|not\s+(?:seeded|seeding|verified|verifying|linked|belong)|unable|fail|error|mismatch)'
+      - '(?i)(?:unable|cannot|can not|not able|fail(?:ed)?|error).{0,80}(?:activate|link|verify|seed).{0,50}\b(?:uan|member id|mid|aadhaar|aadhar|pan|kyc)\b'
+      - '(?i)\b(?:does not belong to the aadhaar set|unable to activate uan|link uan option not working|without (?:a )?uan|no uan)\b'
+
+  - rule_id: "C24_SERVICE_HISTORY_TRANSFER"
+    topic_key: "service_history_transfer_missing"
+    major_topic_key: "record_service_data_availability"
+    label: "Service history/transfer-in is missing or not considered"
+    description: "Previous service, transfer-in, overlapping service or EPS-transfer information is missing or not incorporated in processing."
+    priority: 92
+    patterns:
+      - '(?i)\b(?:previous|prior|transfer[- ]?in|overlapping|eps transfer).{0,80}service.{0,100}(?:not\s+(?:being\s+)?(?:captured|added|incorporated|reflected|reflecting|showing|considered)|missing|mismatch|unable to add)'
+      - '(?i)\bservice.{0,90}(?:transfer[- ]?in|overlapping).{0,100}(?:not\s+(?:captured|added|incorporated|reflected|considered)|missing|mismatch)'
+      - '(?i)(?:unable|cannot|can not|not able).{0,60}(?:add|capture|incorporate|edit).{0,50}\b(?:previous|prior|transfer[- ]?in)\s+services?\b'
+      - '(?i)\ball\s+services?.{0,40}not\s+transfer(?:red)?\b'
+
+  - rule_id: "C26_BENEFIT_CALCULATION"
+    topic_key: "benefit_calculation_mismatch"
+    major_topic_key: "financial_benefit_ledger"
+    label: "Claim benefit/TDS/calculation is incorrect"
+    description: "TDS, benefit, wage, transaction or claim-calculation output is incorrect, inconsistent with the ledger, or omits a required amount."
+    priority: 90
+    patterns:
+      - '(?i)\btds\b.{0,120}(?:not\s+deducted|deducted.{0,50}(?:even|despite|after|although|incorrect|wrong)|wrong|incorrect|not considered|mismatch)'
+      - '(?i)\b(?:short|excess|wrong|incorrect)\s+calculation.{0,100}(?:edli|benefit|claim|tds|charges?|amount)?'
+      - '(?i)\b(?:claim amount|benefit calculation|edli benefit|transaction details?|annexure[- ]?k|balance component).{0,140}(?:wrong|incorrect|negative|not\s+(?:matching|reflected|captured|considered)|mismatch|showing|missing)'
+      - '(?i)\b(?:amount|claim|re[- ]?credit).{0,100}\bwithout\s+interest\b'
+      - '(?i)(?:wrong|incorrect|negative|mismatch|not\s+(?:matching|reflected|captured|considered)).{0,120}\b(?:claim amount|benefit|calculation|tds|wages|transactions?|annexure[- ]?k|balance component)\b'
+      - '(?i)\b(?:no amount|amount (?:is )?not).{0,80}(?:reflecting|reflected|showing).{0,100}(?:annexure[- ]?k|cad|claim|benefit)'
+
+  - rule_id: "C11_DSC_ESIGN"
+    topic_key: "dsc_esign_failure"
+    major_topic_key: "document_signing"
+    label: "DSC/eSign/digital-signing has failed"
+    description: "DSC, eSign, proxy, certificate or digital-signature processing is unavailable or fails during workflow action."
+    priority: 96
+    patterns:
+      - '(?i)\b(?:dsc|e[- ]?sign|digital sign(?:ature)?|signing|signature|certificate).{0,100}(?:not\s+(?:being\s+)?(?:working|available|enabled|processed|approved)|fail|error|unable|cannot|invalid|proxy)'
+      - '(?i)(?:unable|cannot|not able|fail(?:ed)?|error).{0,80}\b(?:dsc|e[- ]?sign|digital sign(?:ature)?|signing|signature)\b'
+
+  - rule_id: "C19_WORKFLOW_ACTION"
+    topic_key: "workflow_action_unavailable"
+    major_topic_key: "workflow_claim_processing"
+    label: "Workflow button/action is missing or disabled"
+    description: "A required start, restart, reject, approval, clarification, nomination or other workflow button/link/action is missing, inactive or not displayed."
+    priority: 88
+    patterns:
+      - '(?i)\b(?:no|missing)\s+(?:option|button|link|tab)\b'
+      - '(?i)\b(?:option|button|link|tab)\b.{0,90}(?:missing|not\s+(?:available|visible|seen|showing|enabled|active|highlighted)|disabled|inactive)'
+      - '(?i)\b(?:restart|start|reject|approval|approve|seek clarification|nomination).{0,80}\b(?:option|button|link|tab)\b.{0,50}(?:missing|not\s+(?:available|visible|seen|showing|enabled|active)|disabled|inactive)?'
+      - '(?i)\btracking id.{0,50}(?:not\s+(?:highlighted|visible|active)|missing|disabled)'
+
+  - rule_id: "C10_DOCUMENT_GENERATION"
+    topic_key: "document_generation_failure"
+    major_topic_key: "document_signing"
+    label: "CAD/worksheet/PDF/report generation has failed"
+    description: "A CAD, worksheet, PDF, PPO, letter, annexure, enclosure, report or cheque cannot be generated, opened, printed or downloaded."
+    priority: 89
+    patterns:
+      - '(?i)\b(?:cad|worksheet|work sheet|summary sheet|pdf|document|letter|ppo|annexure|enclosure|report|receipt file|cheque).{0,100}(?:not\s+(?:generated|available|opening|downloadable|found|prepared)|fail|error|incorrect|wrong|unable|cannot|can not|missing|aborted|different date)'
+      - '(?i)(?:unable|cannot|can not|not able|fail(?:ed)?|error).{0,80}(?:generate|download|print|open|regenerate|prepare).{0,60}\b(?:cad|worksheet|summary sheet|pdf|document|letter|ppo|annexure|enclosure|report|receipt file|cheque)\b'
+
+  - rule_id: "C15_DATA_CORRECTION"
+    topic_key: "data_correction_failure"
+    major_topic_key: "identity_kyc_correction"
+    label: "Data correction/amendment/update has failed"
+    description: "A correction, amendment, de-linking, merger, KYC or profile/detail update cannot be completed or remains incorrect."
+    priority: 84
+    patterns:
+      - '(?i)\b(?:correction|amendment|modify|modification|rectification|data mismatch|details mismatch|wrong details|incorrect details|wrongly seeded|de[- ]?link|delink|merge|merger).{0,110}(?:fail|error|unable|cannot|pending|not\s+(?:updated|working|allowed|reflecting))?'
+      - '(?i)\b(?:date of birth|date of joining|date of exit|dob|doj|doe|gender|father.?s name|marital status|nomination|aadhaar|aadhar|kyc|name correction|address correction|profile correction).{0,110}(?:wrong|incorrect|mismatch|correction|update|amend|unable|cannot|fail|error)'
+      - '(?i)\b(?:update|updation|change).{0,80}(?:date of death|member account status|pohw status).{0,80}(?:fail|error|unable|cannot|not|requires?)?'
+      - '(?i)\b(?:claim|member|account|application) status.{0,80}(?:not\s+(?:updated|reflecting)|wrong|incorrect|requires? (?:correction|update))'
+
+  - rule_id: "C23_LEDGER_ACCOUNTING"
+    topic_key: "ledger_accounting_failure"
+    major_topic_key: "financial_benefit_ledger"
+    label: "Ledger/accounting-year operation has failed"
+    description: "Member-ledger generation or retrieval, accounting withdrawal, opening-balance adjustment, or accounting-year selection has failed."
+    priority: 83
+    patterns:
+      - '(?i)\b(?:member )?ledger.{0,100}(?:can\s*not|cannot|unable|fail|error|not\s+(?:generated|generate|available|retrieved|retrieving)|retriev(?:e|ing)|fetch)'
+      - '(?i)(?:unable|cannot|can not|fail(?:ed)?|error).{0,80}(?:retriev(?:e|ing)|fetch|generate).{0,60}\b(?:member )?ledger\b'
+      - '(?i)\b(?:no valid\s*accounting year|accounting year (?:not found|unavailable)|unable to find accounting year|opening balance adjustment.{0,60}(?:fail|unable|could not)|accounts? withdrawal failed)\b'
+
+  - rule_id: "C09_INWARDING_RECEIPT"
+    topic_key: "inwarding_receipt_failure"
+    major_topic_key: "workflow_claim_processing"
+    label: "Claim inwarding/docketing/receipt has failed"
+    description: "The claim cannot be inwarded, docketed, receipted or scrolled into the processing workflow."
+    priority: 82
+    patterns:
+      - '(?i)\b(?:inward|inwarding|docket|docketing|receipting|receipt of claim|claim receipt|scrolling).{0,90}(?:fail|error|unable|cannot|not\s+(?:working|available|generated|done)|pending)'
+      - '(?i)(?:unable|cannot|not able|fail(?:ed)?).{0,70}\b(?:inward|docket|receipt|scroll)\b'
+      - '(?i)\b(?:physical|manual|pro).{0,50}(?:claim|form).{0,60}(?:entry|receipt|diari[sz](?:e|ed|ing)).{0,60}(?:fail|error|unable|cannot|not|issue)'
+      - '(?i)(?:fail|error|unable|cannot|can not|issue).{0,70}\b(?:physical|manual|pro).{0,50}(?:claim|form).{0,60}(?:entry|receipt|diari[sz](?:e|ed|ing))'
+      - '(?i)(?:unable|cannot|can not|not able|fail(?:ed)?|error).{0,70}\b(?:file|filing|enter|entry|diari[sz]e).{0,40}(?:claim|form)'
+
+  - rule_id: "C12_APPROVAL_SUBMISSION"
+    topic_key: "approval_submission_failure"
+    major_topic_key: "workflow_claim_processing"
+    label: "Approval/rejection/submission action is unavailable"
+    description: "A user cannot submit, approve, reject, forward, recommend, return or upload an item in the workflow."
+    priority: 80
+    patterns:
+      - '(?i)(?:unable|cannot|can not|not able|fail(?:ed)?|error|issue).{0,80}\b(?:submit(?:ting)?|submission|upload|approve|reject|forward|recommend|return)\b'
+      - '(?i)\b(?:submit(?:ting)?|submission|upload|approval|approve|rejection|reject|forward|recommend).{0,90}(?:not\s+(?:available|working|enabled|possible|showing)|unavailable|disabled|missing|fail|error|cannot|unable|issue)'
+      - '(?i)\bnot\s+(?:getting\s+)?approved\b'
+
+  - rule_id: "C06_CREDIT_NOT_REFLECTED"
+    topic_key: "credit_not_reflected"
+    major_topic_key: "financial_benefit_ledger"
+    label: "Contribution/interest/amount is not credited or reflected"
+    description: "A contribution, interest amount, benefit, refund or other monetary credit is missing or not reflected in the ledger/passbook/account."
+    priority: 78
+    patterns:
+      - '(?i)\b(?:amount|payment|contribution|interest|instrest|balance|credit|debit|remittance|refund|benefit|dues?|ledger|passbook|employee\s+share|employer\s+share|pension\s+share|epf\s+share|eps\s+share).{0,120}(?:not\s+(?:(?:yet|being|getting)\s+)?(?:credited|reflected|showing|accounted|received|updated)|missing|non[- ]credit)'
+      - '(?i)(?:not\s+(?:(?:yet|being|getting)\s+)?(?:credited|reflected|showing|accounted|received)|missing|non[- ]credit).{0,120}\b(?:amount|payment|contribution|interest|instrest|balance|credit|debit|remittance|refund|benefit|dues?|ledger|passbook|employee\s+share|employer\s+share|pension\s+share|epf\s+share|eps\s+share)\b'
+
+  - rule_id: "C07_AMOUNT_INCORRECT"
+    topic_key: "amount_balance_incorrect"
+    major_topic_key: "financial_benefit_ledger"
+    label: "Amount, balance, share or interest is incorrect"
+    description: "The amount, balance, contribution share, interest or payment is wrong, excess, short, negative, nil, duplicated or otherwise inconsistent."
+    priority: 76
+    patterns:
+      - '(?i)\b(?:amount|payment|contribution|interest|instrest|balance|credit|debit|remittance|refund|benefit|dues?|ledger|passbook).{0,120}(?:wrong|incorrect|mismatch|difference|discrepanc(?:y|ies)|negative|nil|zero|excess|less|short|double|duplicate|overpayment|underpayment)'
+      - '(?i)(?:wrong|incorrect|mismatch|difference|discrepanc(?:y|ies)|negative|nil|zero|excess|less|short|double|duplicate|overpayment|underpayment).{0,120}\b(?:amount|payment|contribution|interest|instrest|balance|credit|debit|remittance|refund|benefit|dues?|ledger|passbook)\b'
+
+  - rule_id: "C08_PAYMENT_RECONCILIATION"
+    topic_key: "payment_reconciliation_failure"
+    major_topic_key: "financial_benefit_ledger"
+    label: "Payment/remittance/reconciliation status has failed"
+    description: "A payment, remittance, challan, bank response, receipt or reconciliation is failed, cancelled, pending, or has an inconsistent status."
+    priority: 74
+    patterns:
+      - '(?i)\b(?:payment|remittance|challan|trrn|bank response|response file|reconcil(?:e|ed|iation)|receipt).{0,120}(?:fail|error|cancelled|canceled|pending|not\s+(?:received|reconciled|updated|processed)|status)'
+      - '(?i)(?:fail|error|cancelled|canceled|pending|not\s+(?:received|reconciled|updated|processed)).{0,100}\b(?:payment|remittance|challan|trrn|bank response|response file|reconcil(?:e|ed|iation)|receipt)\b'
+
+  - rule_id: "C17_LEGACY_SYNC"
+    topic_key: "legacy_sync_migration"
+    major_topic_key: "legacy_migration_sync"
+    label: "Legacy data migration/synchronisation is incomplete"
+    description: "A legacy-system record, previous claim, service or account has not migrated or synchronised correctly into the current system."
+    priority: 72
+    patterns:
+      - '(?i)\b(?:legacy|migration|migrated|synchroni[sz](?:e|ed|ation)|syncing|old system|previous system).{0,120}(?:not|fail|error|pending|missing|incomplete|issue)'
+      - '(?i)(?:not migrated|not synchroni[sz]ed|syncing pending|migration pending)'
+      - '(?i)\b(?:beneficiary|claim|service|record).{0,100}not\s+(?:settled|available|found|migrated|captured).{0,80}\blegacy\b'
+
+  - rule_id: "C01_VISIBILITY_DA"
+    topic_key: "claim_not_visible_da"
+    major_topic_key: "claim_task_visibility_routing"
+    label: "At DA level"
+    description: "A claim, task, request or case is missing, not routed, or not displayed in the Dealing Assistant (DA) login."
+    priority: 90
+    patterns:
+      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:da|dealing assistant)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+      - '(?i)\b(?:form[- ]?\d+[a-z]?|f\d+).{0,100}(?:not\s+(?:shown|showing|visible|available)|has\s+not\s+(?:shown|appeared|displayed)).{0,80}\b(?:da|dealing assistant)\b'
+
+  - rule_id: "C02_VISIBILITY_SS"
+    topic_key: "claim_not_visible_ss"
+    major_topic_key: "claim_task_visibility_routing"
+    label: "At SS level"
+    description: "A claim, task, request or case is missing, not routed, or not displayed in the Section Supervisor (SS) login."
+    priority: 90
+    patterns:
+      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:ss|section supervisor)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+
+  - rule_id: "C03A_VISIBILITY_AO_APFC"
+    topic_key: "claim_not_visible_ao_apfc"
+    major_topic_key: "claim_task_visibility_routing"
+    label: "At AO/APFC level"
+    description: "A claim, task, request or case is missing, not routed, or not displayed in an AO or APFC login."
+    priority: 90
+    patterns:
+      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:ao|apfc|accounts officer|assistant provident fund commissioner)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+
+  - rule_id: "C03B_VISIBILITY_RPFC_II"
+    topic_key: "claim_not_visible_rpfc_ii"
+    major_topic_key: "claim_task_visibility_routing"
+    label: "At RPFC-II level"
+    description: "A claim, task, request or case is missing, not routed, or not displayed in the RPFC-II login."
+    priority: 91
+    patterns:
+      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\brpfc[- ]?(?:ii|2)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+
+  - rule_id: "C03C_VISIBILITY_RPFC_I_APPROVER"
+    topic_key: "claim_not_visible_rpfc_i_approver"
+    major_topic_key: "claim_task_visibility_routing"
+    label: "At RPFC-I/Approver level"
+    description: "A claim, task, request or case is missing, not routed, or not displayed in an RPFC-I or other approver login."
+    priority: 90
+    patterns:
+      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:rpfc(?:[- ]?(?:i|1))?|approver|approving officer|regional provident fund commissioner)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+
+  - rule_id: "C04_VISIBILITY_OTHER"
+    topic_key: "claim_not_visible_other"
+    major_topic_key: "claim_task_visibility_routing"
+    label: "Workflow level not stated"
+    description: "A claim, task, request or case is not visible, not reflected, missing, or not routed; no specific processing level is reliably stated."
+    priority: 68
+    patterns:
+      - '(?i)\b(?:claims?|tasks?|requests?|applications?|cases?|pendency).{0,110}(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing)'
+      - '(?i)(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing).{0,110}\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b'
+      - '(?i)\b(?:claim not found|not routed|not forwarded to|not received at .* level)\b'
+
+  - rule_id: "C05_RECORD_NOT_VISIBLE"
+    topic_key: "record_not_visible"
+    major_topic_key: "record_service_data_availability"
+    label: "Member/establishment data is not visible or fetched"
+    description: "Member, establishment, service, account, transaction or other required data is missing or cannot be fetched/loaded."
+    priority: 72
+    patterns:
+      - '(?i)\b(?:member|establishment|service|record|entry|details?|data|ecr|transaction|inspection|account|relation|membership|wages?).{0,100}(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available)|missing|unable\s+to\s+fetch)'
+      - '(?i)(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available)|missing).{0,100}\b(?:member|establishment|service|record|entry|details?|data|ecr|transaction|inspection|account|relation|membership|wages?)\b'
+      - '(?i)\b(?:unable|cannot|can not|fail(?:ed)?|error).{0,80}(?:fetch|retrieve|load).{0,60}\b(?:member|establishment|service|record|details?|data|transaction|account|relation|membership|wages?)\b'
+
+  - rule_id: "C16_VALIDATION_CONFLICT"
+    topic_key: "validation_blocked_case_conflict"
+    major_topic_key: "eligibility_validation_status"
+    label: "Validation/blocked-case conflict"
+    description: "Processing is stopped by a remaining validation, invalid-state, blocked-case or already-processed condition not covered by a more specific category."
+    priority: 85
+    patterns:
+      - '(?i)\b(?:already processed|already transferred|invalid (?:claim|data|status)|validation (?:error|failed)|blocked (?:case|claim|member|establishment)|accounting year changed|not permitted|not allowed due to)\b'
+      - '(?i)\b(?:claim|application|member|establishment|account).{0,90}(?:blocked|invalid|already exists)'
+      - '(?i)\bjoint\s+(?:declaration|request).{0,80}pending.{0,100}(?:already\s+approved|already\s+updated|approved and updated)'
+
+  - rule_id: "C13_LOGIN_ACCESS_OTP"
+    topic_key: "login_otp_failure"
+    major_topic_key: "access_system_availability"
+    label: "Login/password/OTP/access has failed"
+    description: "Authentication fails because login, password, user ID, role access, session or OTP is unavailable, disabled, denied or not received."
+    priority: 86
+    patterns:
+      - '(?i)(?:unable|cannot|not able|fail(?:ed)?|error|issue|problem).{0,80}\b(?:login|log in|access|authentication|password|user id|role|session|otp)\b'
+      - '(?i)\b(?:login|log in|access|authentication|password|user id|role|session|otp).{0,90}(?:not\s+(?:working|opening|received|available|enabled|functional)|fail|error|denied|blocked|disabled|unable|cannot|reset)'
+      - '(?i)\b(?:get otp failed|otp failed|user session expired|session expired|system (?:is )?(?:logging|log(?:ged)?) out|getting log(?:ged)? out)\b'
+
+  - rule_id: "C14_PORTAL_SERVER"
+    topic_key: "portal_server_failure"
+    major_topic_key: "access_system_availability"
+    label: "Portal/module/server is unavailable"
+    description: "A portal, website, interface, module, server, proxy or service is unavailable, not opening, not working or returning a connection/system error."
+    priority: 50
+    patterns:
+      - '(?i)\b(?:portal|website|interface|module|server|proxy|service).{0,100}(?:not\s+(?:working|opening|available|enabled|functional)|fail|error|down|unavailable|unable|cannot|timed out)'
+      - '(?i)\b(?:server not found|cannot connect to (?:the )?server|proxy error|internal server error|service unavailable|connection timed out)\b'
+
+  - rule_id: "C18_PROCESSING_FAILURE"
+    topic_key: "processing_failure"
+    major_topic_key: "workflow_claim_processing"
+    label: "Processing/initiation/settlement has failed"
+    description: "The issue reports a technical or functional failure while initiating, processing, settling, compiling, calculating, reconciling or completing a case."
+    priority: 30
+    patterns:
+      - '(?i)(?:unable|cannot|can not|not able|fail(?:ed)?|error|issue).{0,90}\b(?:process(?:ing)?|settle|initiate|complete|proceed|operate|execute|calculate|compile|reconcile|open|restart|recredit|surrender|finali[sz]e)\b'
+      - '(?i)\b(?:process|processing|settlement|application|claim|functionality|system|account).{0,110}(?:not\s+(?:processed|working|completed|done|opening)|fail|error|aborted|stuck|pending|unable|cannot|exception)'
+      - '(?i)\b(?:technical error|system error|unexpected error|java error|not processed|not restarting|processing pending|functionality not available|non[- ]updation|not getting (?:processed|updated|reconciled|calculated)|not finali[sz]ed)\b'
+
+  - rule_id: "C99_OTHER"
+    topic_key: "other_insufficient_detail"
+    major_topic_key: "other"
+    label: "Other case-specific or insufficient-detail issue"
+    description: "The supplied Summary and Description do not contain enough stable textual evidence for one of the defined problem categories."
+    priority: 0
+    patterns: []

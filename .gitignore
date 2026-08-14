@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data and report outputs (prevent committing real PII / tracker dumps)
+*.csv
+*.xlsx
+*.pptx
+*.docx
+*.zip
+*.sqlite
+*.sqlite3
+*.db
+reports/
+output/
+archive/
+backups/
+extracted_logs/
+cites_ops_runtime/
+
+# Exception: allow example files
+!examples/*.csv
+!examples/*.txt
+!examples/*.yaml
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
