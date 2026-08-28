@@ -24,9 +24,9 @@ class WeeklyResolutionsReporter:
 <style>
 :root{--navy:#0b1f33;--ink:#172a3a;--muted:#647584;--paper:#f4f7fb;--line:#d9e2ea;--white:#fff;--blue:#326bff;--teal:#168c7c;--green:#137d68;--purple:#6740aa;--amber:#d98a0b;--shadow:0 7px 25px rgba(11,31,51,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.45 "Segoe UI",Aptos,Arial,sans-serif}.top{background:var(--navy);color:#fff;padding:22px max(24px,calc((100vw - 1500px)/2))}.top small{color:#a9bdce}.top h1{margin:3px 0 2px;font-size:25px}.wrap{max-width:1500px;margin:auto;padding:25px}.panel{background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);padding:19px}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:14px}.head h2{margin:0 0 4px;font-size:19px}.muted{color:var(--muted)}.nav{display:flex;align-items:center;gap:8px;white-space:nowrap}.nav button,.controls button,.controls select{border:0;border-radius:8px;background:#e8eef5;color:var(--ink);padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}.nav button.arrow{background:var(--blue);color:#fff;font-size:18px;padding:5px 13px}.nav button:disabled{opacity:.35;cursor:not-allowed}.status-kpis{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:11px;margin-bottom:13px}.status-kpis article{position:relative;overflow:hidden;border-radius:9px;color:#fff;padding:14px 16px;min-height:94px;box-shadow:0 5px 16px rgba(11,31,51,.12)}.status-kpis article:after{content:'';position:absolute;width:75px;height:75px;border-radius:50%;background:rgba(255,255,255,.09);right:-18px;bottom:-25px}.status-kpis span,.status-kpis small{display:block;color:rgba(255,255,255,.82)}.status-kpis span{font-size:12px;font-weight:700}.status-kpis strong{display:block;font-size:28px;line-height:1.1;margin:7px 0 3px}.kpi-total{background:var(--navy)}.kpi-resolved{background:var(--green)}.kpi-yesterday{background:var(--purple)}.kpi-open{background:var(--amber)}.controls{display:flex;justify-content:flex-end;gap:7px;margin-bottom:10px}.scroll{overflow-x:auto;overscroll-behavior-x:contain;border:1px solid var(--line);border-radius:8px;max-width:100%}.grid{display:grid;grid-template-columns:100px minmax(280px,1.8fr) repeat(3,minmax(105px,.62fr)) repeat(5,minmax(120px,.7fr));align-items:stretch;min-width:1360px;background:#fff;border-bottom:1px solid #e6edf2}.grid>span,.grid>b{padding:10px 11px;display:flex;align-items:center}.grid>span:not(:first-child){justify-content:flex-end;text-align:right}.grid>b{text-align:left}.header{background:var(--navy);color:#fff;text-transform:uppercase;font-size:11px;letter-spacing:.04em;position:sticky;top:0;z-index:8}.header small{display:block;color:#a9bdce;text-transform:none;letter-spacing:0;margin-left:5px}.status-total-cell{color:var(--navy);font-weight:800}.status-open-cell{color:#a56400;font-weight:800}.status-resolved-cell{color:var(--green);font-weight:800}.daily-low{background:#fff0f1!important;color:#a61b2b;font-weight:800;box-shadow:inset 0 0 0 1px #f4c8cd}.header .status-total-cell,.header .status-open-cell,.header .status-resolved-cell{color:#fff}.total{background:#edf3ff;font-weight:800}.node>summary{cursor:pointer;list-style:none}.node>summary::-webkit-details-marker{display:none}.node>summary>b:before{content:'›';display:inline-block;margin-right:7px;color:var(--blue);font-size:18px;transition:transform .15s}.node[open]>summary>b:before{transform:rotate(90deg)}.node summary:hover,.team:hover{background:#f6f9ff}.children{margin-left:18px;border-left:2px solid #dfe7ee;padding-left:7px;min-width:1360px}.children .grid{min-width:calc(1360px - 25px)}.grid>span:first-child,.grid>b{position:sticky;z-index:2;background:inherit}.grid>span:first-child{left:0}.grid>b{left:100px}.header>span:first-child,.header>b{z-index:9;background:var(--navy)}.level-dd{background:#f9fbfd}.level-official{background:#fcfdff}.team{background:#fff}.foot{display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:11px;margin-top:12px}.empty{text-align:center;padding:35px;color:var(--muted)}
-.header>span:not(:first-child){display:grid;justify-content:end}.header small{margin:0}.grid{grid-template-columns:100px minmax(280px,1.8fr) minmax(115px,.68fr) repeat(3,minmax(105px,.62fr)) repeat(5,minmax(120px,.7fr));min-width:1480px}.children{min-width:1480px}.children .grid{min-width:calc(1480px - 25px)}.level-jd{background:#f5f8fc}.level-dd{background:#fafbfd}.level-official{background:#fff}.team{background:#fbfcfe;border-bottom:1px dashed #dfe7ee}.level-jd>span:first-child{color:#6740aa;font-weight:800}.level-dd>span:first-child{color:#116c5c;font-weight:800}.level-official>span:first-child{color:#2454d9;font-weight:800}.team>span:first-child{color:var(--muted);font-weight:700}
+.header>span:not(:first-child){display:grid;justify-content:end}.header small{margin:0}.grid{grid-template-columns:100px minmax(280px,1.8fr) minmax(115px,.68fr) repeat(3,minmax(105px,.62fr)) repeat(5,minmax(120px,.7fr));width:1480px;min-width:1480px;max-width:1480px}.node,.node>summary,.children{width:1480px;min-width:1480px;max-width:1480px}.children{margin-left:0;border-left:0;padding-left:0}.children .grid{width:1480px;min-width:1480px;max-width:1480px}.depth-2>.grid>b,.depth-2>summary>b{padding-left:28px}.depth-3>.grid>b,.depth-3>summary>b{padding-left:46px}.team>b{padding-left:64px}.grid>b{min-width:0;overflow-wrap:anywhere;word-break:break-word}.level-jd{background:#f5f8fc}.level-dd{background:#fafbfd}.level-official{background:#fff}.team{background:#fbfcfe;border-bottom:1px dashed #dfe7ee}.level-jd>span:first-child{color:#6740aa;font-weight:800}.level-dd>span:first-child{color:#116c5c;font-weight:800}.level-official>span:first-child{color:#2454d9;font-weight:800}.team>span:first-child{color:var(--muted);font-weight:700}
 @media(max-width:900px){.status-kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.wrap{padding:12px}.head{display:block}.nav{margin-top:12px}.status-kpis{grid-template-columns:1fr}.controls{justify-content:flex-start;flex-wrap:wrap}.foot{display:block}}
-@media print{body{background:#fff}.top{padding:12px;color:#000;background:#fff;border-bottom:2px solid #000}.top small{color:#555}.wrap{padding:10px;max-width:none}.panel{box-shadow:none;border:0;padding:0}.nav,.controls{display:none}.scroll{overflow:visible;border:0}.grid{min-width:100%;grid-template-columns:65px minmax(170px,1.7fr) minmax(62px,.58fr) repeat(3,minmax(55px,.55fr)) repeat(5,minmax(65px,.65fr));font-size:9px}.children,.children .grid{min-width:100%}.node{break-inside:avoid}.header{background:#ddd!important;color:#000}.header>span:first-child,.header>b{background:#ddd!important}.grid>span:first-child,.grid>b{position:static}}
+@media print{body{background:#fff}.top{padding:12px;color:#000;background:#fff;border-bottom:2px solid #000}.top small{color:#555}.wrap{padding:10px;max-width:none}.panel{box-shadow:none;border:0;padding:0}.nav,.controls{display:none}.scroll{overflow:visible;border:0}.grid{width:100%;min-width:100%;max-width:100%;grid-template-columns:65px minmax(170px,1.7fr) minmax(62px,.58fr) repeat(3,minmax(55px,.55fr)) repeat(5,minmax(65px,.65fr));font-size:9px}.node,.node>summary,.children,.children .grid{width:100%;min-width:100%;max-width:100%}.node{break-inside:avoid}.header{background:#ddd!important;color:#000}.header>span:first-child,.header>b{background:#ddd!important}.grid>span:first-child,.grid>b{position:static}}
 </style>
 </head>
 <body>
@@ -256,50 +256,38 @@ render();
         daily_totals = {k: 0 for k in dates_keys}
         category_daily = {}  # category -> {date -> count}
 
-        # Check stats docx sources if provided
-        if stats_sources:
-            for src in stats_sources:
-                s_date = src["source"]["data_date"]
-                # If stats docx matches a weekday in this week
-                if s_date in daily_totals:
-                    # Mark available
-                    for d_entry in dates_list:
-                        if d_entry["date"] == s_date:
-                            d_entry["available"] = True
-                            d_entry["from_date"] = "prior"
-                    for cat in src["categories"]:
-                        k = cat["module_key"]
-                        if k not in category_daily:
-                            category_daily[k] = {dk: 0 for dk in dates_keys}
-                        category_daily[k][s_date] = cat["resolved"]
-                        daily_totals[s_date] += cat["resolved"]
-
-        # If historical snapshots or current intake available, populate transition deltas
-        # Friday/weekend attribution from Monday intake:
-        # If Monday intake is on Monday after Friday, populate Friday's column with the 309 resolutions!
-        friday_key = dates_keys[4]
-        if friday_key == "2026-08-14" or (monday == date(2026, 8, 10)):
-            # Set baseline known numbers for the week 10-14 Aug 2026
-            known_week = {
-                "2026-08-10": 164,
-                "2026-08-11": 95,
-                "2026-08-12": 148,
-                "2026-08-13": 260,
-                "2026-08-14": 309,
+        # Derive weekday values only from comparable cumulative snapshots.
+        # No estimates or date-specific constants are permitted in an official report.
+        ordered_sources = sorted(
+            (src for src in (stats_sources or []) if src.get("source", {}).get("data_date")),
+            key=lambda src: src["source"]["data_date"],
+        )
+        for index, current in enumerate(ordered_sources):
+            current_date = current["source"]["data_date"]
+            if current_date not in daily_totals or index == 0:
+                continue
+            previous = ordered_sources[index - 1]
+            previous_date = previous["source"]["data_date"]
+            previous_categories = {
+                cat.get("module_key", ""): int(cat.get("resolved", 0)) + int(cat.get("closed", 0))
+                for cat in previous.get("categories", [])
             }
-            from_dates = {
-                "2026-08-10": "2026-08-09",
-                "2026-08-11": "2026-08-10",
-                "2026-08-12": "2026-08-11",
-                "2026-08-13": "2026-08-12",
-                "2026-08-14": "2026-08-13",
+            current_categories = {
+                cat.get("module_key", ""): int(cat.get("resolved", 0)) + int(cat.get("closed", 0))
+                for cat in current.get("categories", [])
             }
+            all_categories = set(previous_categories) | set(current_categories)
+            for category_key in all_categories:
+                if not category_key:
+                    continue
+                category_daily.setdefault(category_key, {dk: 0 for dk in dates_keys})
+                delta = current_categories.get(category_key, 0) - previous_categories.get(category_key, 0)
+                category_daily[category_key][current_date] = delta
+                daily_totals[current_date] += delta
             for d_entry in dates_list:
-                dk = d_entry["date"]
-                if dk in known_week:
+                if d_entry["date"] == current_date:
                     d_entry["available"] = True
-                    d_entry["from_date"] = from_dates.get(dk)
-                    daily_totals[dk] = known_week[dk]
+                    d_entry["from_date"] = previous_date
 
         # Calculate module level snapshots from df_current
         def get_queue_type(assignee: str) -> str:
@@ -312,30 +300,48 @@ render();
                 return "field"
             return "other"
 
-        df_current["q_type"] = df_current["Assigned To"].apply(get_queue_type)
-        closed_mask = df_current["Status"].astype(str).str.lower().isin(["resolved", "fixed", "closed"])
+        df_work = df_current.copy()
+        df_work["q_type"] = df_work["Assigned To"].apply(get_queue_type)
+        closed_mask = df_work["Status"].astype(str).str.lower().isin(["resolved", "fixed", "closed"])
 
         # Aggregate current status
-        epfo_df = df_current[df_current["q_type"] == "epfo"]
+        epfo_df = df_work[df_work["q_type"] == "epfo"]
         epfo_status = {
             "total": len(epfo_df),
             "open": int((~closed_mask[epfo_df.index]).sum()),
             "resolved": int(closed_mask[epfo_df.index].sum()),
-            "cdac_total": int((df_current["q_type"] == "cdac").sum()),
-            "field_total": int((df_current["q_type"] == "field").sum()),
+            "cdac_total": int((df_work["q_type"] == "cdac").sum()),
+            "field_total": int((df_work["q_type"] == "field").sum()),
         }
+
+        current_source = next(
+            (src for src in reversed(ordered_sources) if src["source"]["data_date"] == report_date),
+            None,
+        )
+        previous_source = None
+        if current_source:
+            current_index = ordered_sources.index(current_source)
+            if current_index > 0:
+                previous_source = ordered_sources[current_index - 1]
+        resolved_delta = None
+        previous_date = None
+        if current_source and previous_source:
+            current_total = int(current_source.get("totals", {}).get("resolved", 0)) + int(current_source.get("totals", {}).get("closed", 0))
+            previous_total = int(previous_source.get("totals", {}).get("resolved", 0)) + int(previous_source.get("totals", {}).get("closed", 0))
+            resolved_delta = current_total - previous_total
+            previous_date = previous_source["source"]["data_date"]
 
         status_kpi = {
             "total": epfo_status["total"],
             "open": epfo_status["open"],
             "resolved_closed": epfo_status["resolved"],
-            "resolved_since_previous": daily_totals[friday_key] if daily_totals[friday_key] > 0 else 309,
+            "resolved_since_previous": resolved_delta,
             "as_of": report_date,
-            "previous_date": "2026-08-13",
+            "previous_date": previous_date,
         }
 
         # Build 4-tier hierarchy for weekly table: JD -> DD -> Official -> Team
-        hierarchy = cls._build_weekly_hierarchy(df_current, df_teams, dates_keys, daily_totals)
+        hierarchy = cls._build_weekly_hierarchy(df_work, df_teams, dates_keys, category_daily)
 
         return {
             "week_start": monday.isoformat(),
@@ -354,7 +360,7 @@ render();
         df_issues: pd.DataFrame,
         df_teams: pd.DataFrame,
         dates_keys: List[str],
-        daily_totals: Dict[str, int],
+        category_daily: Dict[str, Dict[str, int]],
     ) -> List[Dict[str, Any]]:
         mapper = WorkforceMapper()
         norm_map = {}
@@ -392,27 +398,6 @@ render();
             elif q_type == "field":
                 team_issues[cat]["field_total"] += 1
 
-        # Friday resolution distribution by category
-        friday_known_cat_delta = {
-            "form_10d": 109,
-            "form_13": 41,
-            "form_20": 32,
-            "joint_declaration": 28,
-            "employer": 23,
-            "form_31": 15,
-            "form_10c": 15,
-            "form_19": 13,
-            "hr_soft": 8,
-            "appendix_e": 7,
-            "form_5if": 5,
-            "vdr_and_vdr_special": 4,
-            "cites_other_functionalities": 2,
-            "caiu": 2,
-            "dsc_e_sign": 2,
-            "pension_amendment_brs": 1,
-            "e_proceeding": 1,
-        }
-
         # Build tree: JD -> DD -> Handler -> Team
         jd_tree: Dict[str, Dict[str, Any]] = {}
 
@@ -431,17 +416,7 @@ render();
             t_name = meta["team_name"]
 
             # Daily distribution for this team
-            team_days = {k: 0 for k in dates_keys}
-            if norm_key in friday_known_cat_delta:
-                team_days[dates_keys[4]] = friday_known_cat_delta[norm_key]
-
-            # Approximate earlier weekdays based on volume
-            tot_res = metrics["resolved"]
-            if tot_res > 0:
-                team_days[dates_keys[0]] = max(0, int(tot_res * 0.15))
-                team_days[dates_keys[1]] = max(0, int(tot_res * 0.10))
-                team_days[dates_keys[2]] = max(0, int(tot_res * 0.15))
-                team_days[dates_keys[3]] = max(0, int(tot_res * 0.25))
+            team_days = dict(category_daily.get(norm_key, {k: 0 for k in dates_keys}))
 
             if jd_name not in jd_tree:
                 jd_tree[jd_name] = {

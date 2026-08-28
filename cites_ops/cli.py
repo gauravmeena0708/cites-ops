@@ -22,6 +22,7 @@ from .reporters.interactive_topics_reporter import InteractiveTopicsReporter
 from .reporters.weekly_resolutions_reporter import WeeklyResolutionsReporter
 from .reporters.status_docx_reporter import StatusDocxReporter
 from .core.mantis_client import MantisClient
+from .pipeline import parse_report_date, parse_report_selection, run_daily_pipeline
 
 def find_default_teams_file() -> Optional[Path]:
     """Look for standard teams mapping files in current working directory and common locations."""
@@ -137,6 +138,24 @@ def main():
     cmd_mantis.add_argument("--prev-docx", type=str, help="Optional previous day's Samadhan Setu Status DOCX for difference calculation.")
     cmd_mantis.add_argument("--classify", action="store_true", help="Also classify issues and enrich with aging metrics.")
 
+    # Command: daily (preferred end-to-end workflow)
+    cmd_daily = subparsers.add_parser(
+        "daily",
+        help="Fetch MantisBT once and publish the standardized daily reporting pack.",
+    )
+    cmd_daily.add_argument("--date", "-d", type=str, default=str(date.today()), help="Report date (YYYY-MM-DD).")
+    cmd_daily.add_argument("--input-dir", type=str, default="../tmp/input", help="Directory containing issue_teams.csv and optionally token.txt.")
+    cmd_daily.add_argument("--output-root", "-o", type=str, default="../tmp/output", help="Root directory; a YYYY-MM-DD child directory is created.")
+    cmd_daily.add_argument("--teams", type=str, help="Explicit issue-team mapping CSV path.")
+    cmd_daily.add_argument("--token", "-t", type=str, default=None, help="MantisBT API token. Prefer MANTIS_API_TOKEN or --token-file.")
+    cmd_daily.add_argument("--token-file", type=str, help="Path to a file containing only the MantisBT API token.")
+    cmd_daily.add_argument("--url", "-u", type=str, default=os.getenv("MANTIS_API_URL", MantisClient.DEFAULT_URL), help="MantisBT REST API base URL.")
+    cmd_daily.add_argument("--project", "-p", type=str, default=None, help="Optional MantisBT project ID or name.")
+    cmd_daily.add_argument("--reports", type=str, default="default", help="default/all or comma-separated report keys.")
+    cmd_daily.add_argument("--exclude", type=str, default="", help="Comma-separated report keys to omit.")
+    cmd_daily.add_argument("--overwrite", action="store_true", help="Replace an existing output directory for this report date.")
+    cmd_daily.add_argument("--insecure", action="store_true", help="Disable TLS certificate verification (local development only).")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -161,6 +180,39 @@ def main():
         run_regional_pptx(args)
     elif args.command in ("fetch-mantis", "mantis"):
         run_fetch_mantis(args)
+    elif args.command == "daily":
+        run_daily(args)
+
+
+def run_daily(args):
+    try:
+        report_date = parse_report_date(args.date)
+        selected = parse_report_selection(args.reports)
+        if args.exclude:
+            excluded = parse_report_selection(args.exclude)
+            selected -= excluded
+        if not selected:
+            raise ValueError("No reports remain after applying --exclude")
+
+        result = run_daily_pipeline(
+            report_date=report_date,
+            input_dir=Path(args.input_dir),
+            output_root=Path(args.output_root),
+            base_url=args.url,
+            token=args.token,
+            token_file=Path(args.token_file) if args.token_file else None,
+            teams_file=Path(args.teams) if args.teams else None,
+            project=args.project,
+            reports=selected,
+            overwrite=args.overwrite,
+            verify_ssl=not args.insecure,
+        )
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"[OK] Published {len(result.artifacts)} standardized reports to {result.output_dir}")
+    print(f"[OK] Run manifest: {result.manifest_path}")
 
 def run_classify(args):
     print(f"Reading {args.input_csv}...")

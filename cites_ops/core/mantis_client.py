@@ -25,7 +25,7 @@ class MantisClient:
         self,
         base_url: Optional[str] = None,
         token: Optional[str] = None,
-        verify_ssl: bool = False,
+        verify_ssl: bool = True,
     ):
         self.base_url = (base_url or os.getenv("MANTIS_API_URL") or self.DEFAULT_URL).rstrip("/")
         self.token = token or os.getenv("MANTIS_API_TOKEN") or self.DEFAULT_TOKEN

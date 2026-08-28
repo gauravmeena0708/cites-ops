@@ -57,6 +57,27 @@ class StatusDocxReporter:
         tblPr.append(borders_elm)
 
     @classmethod
+    def format_cell_paragraph(cls, cell, alignment):
+        """Apply compact, readable formatting without inherited paragraph gaps."""
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        paragraph = cell.paragraphs[0]
+        paragraph.alignment = alignment
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(0)
+        paragraph.paragraph_format.line_spacing = 1.0
+        return paragraph
+
+    @classmethod
+    def set_column_widths(cls, table, widths_inches):
+        """Set deliberate widths so category names do not wrap unnecessarily."""
+        table.autofit = False
+        for col_idx, width_inches in enumerate(widths_inches):
+            width = Inches(width_inches)
+            table.columns[col_idx].width = width
+            for row in table.rows:
+                row.cells[col_idx].width = width
+
+    @classmethod
     def compute_metrics(cls, df: pd.DataFrame) -> Tuple[Dict[str, int], pd.DataFrame]:
         """
         Calculates overall totals and category-wise open, resolved, closed breakdown.
@@ -137,8 +158,10 @@ class StatusDocxReporter:
             except ValueError:
                 try:
                     rep_date = datetime.strptime(report_date, "%d-%m-%Y").date()
-                except ValueError:
-                    rep_date = date.today()
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid report date {report_date!r}; expected YYYY-MM-DD or DD-MM-YYYY"
+                    ) from exc
         else:
             rep_date = report_date
 
@@ -181,27 +204,27 @@ class StatusDocxReporter:
         # Page margins
         sections = doc.sections
         for section in sections:
-            section.top_margin = Inches(0.8)
-            section.bottom_margin = Inches(0.8)
-            section.left_margin = Inches(0.8)
-            section.right_margin = Inches(0.8)
+            section.top_margin = Inches(0.55)
+            section.bottom_margin = Inches(0.55)
+            section.left_margin = Inches(0.6)
+            section.right_margin = Inches(0.6)
 
         # Paragraph 1: Date header
         p_date = doc.add_paragraph()
         p_date.paragraph_format.space_before = Pt(0)
-        p_date.paragraph_format.space_after = Pt(6)
+        p_date.paragraph_format.space_after = Pt(3)
         r_date = p_date.add_run(f"Date: {date_str_formatted}")
         r_date.font.name = "Calibri"
-        r_date.font.size = Pt(11)
+        r_date.font.size = Pt(10)
         r_date.font.bold = False
 
         # Paragraph 2: Intro
         p_intro = doc.add_paragraph()
         p_intro.paragraph_format.space_before = Pt(0)
-        p_intro.paragraph_format.space_after = Pt(10)
+        p_intro.paragraph_format.space_after = Pt(5)
         r_intro = p_intro.add_run("Please refer the below table, wherein the progress of resolving/closed status of Samadhan Setu is.")
         r_intro.font.name = "Calibri"
-        r_intro.font.size = Pt(11)
+        r_intro.font.size = Pt(10)
 
         # =========================================================================
         # Table 0: Progress Status (5 rows, 6 cols)
@@ -209,73 +232,69 @@ class StatusDocxReporter:
         t0 = doc.add_table(rows=5, cols=6)
         t0.alignment = WD_TABLE_ALIGNMENT.CENTER
         cls.set_table_borders(t0)
+        cls.set_column_widths(t0, [0.55, 1.65, 1.2, 1.2, 1.2, 1.2])
 
         # Row 0: Merged Header
         cell_00 = t0.cell(0, 0)
         cell_05 = t0.cell(0, 5)
         merged_0 = cell_00.merge(cell_05)
-        p_hdr = merged_0.paragraphs[0]
-        p_hdr.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        p_hdr = cls.format_cell_paragraph(merged_0, WD_PARAGRAPH_ALIGNMENT.CENTER)
         r_hdr = p_hdr.add_run("Samadhan Setu Progress Status")
         r_hdr.font.name = "Calibri"
-        r_hdr.font.size = Pt(11)
+        r_hdr.font.size = Pt(9.5)
         r_hdr.font.bold = True
-        cls.set_cell_margins(merged_0, top=120, bottom=120)
+        cls.set_cell_margins(merged_0, top=40, bottom=40, left=80, right=80)
 
         # Row 1: Column Titles
         col_titles = ["S.no", "Date", "Open", "Resolved", "Closed", "Total"]
         for idx, title in enumerate(col_titles):
             cell = t0.cell(1, idx)
-            p = cell.paragraphs[0]
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            p = cls.format_cell_paragraph(cell, WD_PARAGRAPH_ALIGNMENT.CENTER)
             r = p.add_run(title)
             r.font.name = "Calibri"
-            r.font.size = Pt(11)
+            r.font.size = Pt(9)
             r.font.bold = True
-            cls.set_cell_margins(cell, top=100, bottom=100)
+            cls.set_cell_margins(cell, top=30, bottom=30, left=60, right=60)
 
         # Row 2: Today (S.no 2)
         row2_data = ["2", date_str_formatted, str(totals_today["open"]), str(totals_today["resolved"]), str(totals_today["closed"]), str(totals_today["total"])]
         for idx, val in enumerate(row2_data):
             cell = t0.cell(2, idx)
-            p = cell.paragraphs[0]
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            p = cls.format_cell_paragraph(cell, WD_PARAGRAPH_ALIGNMENT.CENTER)
             r = p.add_run(val)
             r.font.name = "Calibri"
-            r.font.size = Pt(11)
-            cls.set_cell_margins(cell, top=80, bottom=80)
+            r.font.size = Pt(9)
+            cls.set_cell_margins(cell, top=20, bottom=20, left=60, right=60)
 
         # Row 3: Yesterday / Previous (S.no 1)
         row3_data = ["1", prev_date_str, str(prev_totals["open"]), str(prev_totals["resolved"]), str(prev_totals["closed"]), str(prev_totals["total"])]
         for idx, val in enumerate(row3_data):
             cell = t0.cell(3, idx)
-            p = cell.paragraphs[0]
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            p = cls.format_cell_paragraph(cell, WD_PARAGRAPH_ALIGNMENT.CENTER)
             r = p.add_run(val)
             r.font.name = "Calibri"
-            r.font.size = Pt(11)
-            cls.set_cell_margins(cell, top=80, bottom=80)
+            r.font.size = Pt(9)
+            cls.set_cell_margins(cell, top=20, bottom=20, left=60, right=60)
 
         # Row 4: Difference
         row4_data = ["", "Difference", str(diff_open), str(diff_resolved), str(diff_closed), str(diff_total)]
         for idx, val in enumerate(row4_data):
             cell = t0.cell(4, idx)
-            p = cell.paragraphs[0]
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            p = cls.format_cell_paragraph(cell, WD_PARAGRAPH_ALIGNMENT.CENTER)
             r = p.add_run(val)
             r.font.name = "Calibri"
-            r.font.size = Pt(11)
+            r.font.size = Pt(9)
             if idx == 1:
                 r.font.bold = True
-            cls.set_cell_margins(cell, top=80, bottom=80)
+            cls.set_cell_margins(cell, top=20, bottom=20, left=60, right=60)
 
         # Paragraph 3: Category intro
         p_cat_intro = doc.add_paragraph()
-        p_cat_intro.paragraph_format.space_before = Pt(14)
-        p_cat_intro.paragraph_format.space_after = Pt(8)
+        p_cat_intro.paragraph_format.space_before = Pt(6)
+        p_cat_intro.paragraph_format.space_after = Pt(4)
         r_cat_intro = p_cat_intro.add_run("Further, the category wise status is also given as under:")
         r_cat_intro.font.name = "Calibri"
-        r_cat_intro.font.size = Pt(11)
+        r_cat_intro.font.size = Pt(10)
 
         # =========================================================================
         # Table 1: Category Wise Status (N+1 rows, 5 cols)
@@ -284,18 +303,19 @@ class StatusDocxReporter:
         t1 = doc.add_table(rows=num_cat_rows, cols=5)
         t1.alignment = WD_TABLE_ALIGNMENT.CENTER
         cls.set_table_borders(t1)
+        cls.set_column_widths(t1, [3.7, 0.9, 0.9, 0.9, 0.9])
 
         # Table 1 Header
         t1_headers = ["By Category", "open", "resolved", "closed", "total"]
         for idx, h_text in enumerate(t1_headers):
             cell = t1.cell(0, idx)
-            p = cell.paragraphs[0]
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT if idx == 0 else WD_PARAGRAPH_ALIGNMENT.CENTER
+            alignment = WD_PARAGRAPH_ALIGNMENT.LEFT if idx == 0 else WD_PARAGRAPH_ALIGNMENT.CENTER
+            p = cls.format_cell_paragraph(cell, alignment)
             r = p.add_run(h_text)
             r.font.name = "Calibri"
-            r.font.size = Pt(11)
+            r.font.size = Pt(9)
             r.font.bold = True
-            cls.set_cell_margins(cell, top=100, bottom=100)
+            cls.set_cell_margins(cell, top=30, bottom=30, left=60, right=60)
 
         # Table 1 Category Rows
         for r_idx, row in cat_df.iterrows():
@@ -309,12 +329,12 @@ class StatusDocxReporter:
             ]
             for col_idx, val in enumerate(row_vals):
                 cell = t1.cell(table_row_idx, col_idx)
-                p = cell.paragraphs[0]
-                p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT if col_idx == 0 else WD_PARAGRAPH_ALIGNMENT.CENTER
+                alignment = WD_PARAGRAPH_ALIGNMENT.LEFT if col_idx == 0 else WD_PARAGRAPH_ALIGNMENT.CENTER
+                p = cls.format_cell_paragraph(cell, alignment)
                 r = p.add_run(val)
                 r.font.name = "Calibri"
-                r.font.size = Pt(11)
-                cls.set_cell_margins(cell, top=60, bottom=60)
+                r.font.size = Pt(9)
+                cls.set_cell_margins(cell, top=15, bottom=15, left=60, right=60)
 
         doc.save(str(out_path))
         return out_path

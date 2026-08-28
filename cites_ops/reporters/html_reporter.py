@@ -356,9 +356,9 @@ class HTMLReporter:
         .action-btn:hover {{ background: #F1F5F9; border-color: #CBD5E1; }}
 
         /* Tables */
-        .table-wrap {{ overflow-x: auto; }}
-        table {{ width: 100%; border-collapse: collapse; text-align: left; }}
-        th, td {{ padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.90rem; vertical-align: middle; }}
+        .table-wrap {{ overflow-x: auto; max-width: 100%; overscroll-behavior-x: contain; }}
+        table {{ width: 100%; min-width: 980px; border-collapse: collapse; text-align: left; }}
+        th, td {{ padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.90rem; vertical-align: middle; overflow-wrap: anywhere; }}
         th {{ background-color: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; position: sticky; top: 0; }}
         tr:hover {{ background-color: #F8FAFC; }}
 
@@ -379,7 +379,8 @@ class HTMLReporter:
         .badge-level-4 {{ background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }} /* Topic: Amber */
 
         /* Tree Structure Styling */
-        .tree-node-cell {{ display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }}
+        .tree-node-cell {{ display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; min-width: 0; max-width: 100%; }}
+        .tree-node-cell .node-name {{ min-width: 0; overflow-wrap: anywhere; word-break: break-word; }}
         .tree-icon {{ font-size: 0.75rem; color: var(--text-muted); width: 14px; text-align: center; transition: transform 0.2s; }}
         .tree-icon-leaf {{ font-size: 0.9rem; color: #94A3B8; width: 14px; text-align: center; }}
         .depth-font-0 {{ font-size: 1.02rem; font-weight: 700; color: #1E1B4B; }}

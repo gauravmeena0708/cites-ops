@@ -255,9 +255,9 @@ class DefectDrilldownReporter:
         .panel-subtitle {{ font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }}
 
         /* Table */
-        .table-wrap {{ overflow-x: auto; }}
-        table {{ width: 100%; border-collapse: collapse; text-align: left; }}
-        th, td {{ padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.92rem; vertical-align: middle; }}
+        .table-wrap {{ overflow-x: auto; max-width: 100%; overscroll-behavior-x: contain; }}
+        table {{ width: 100%; min-width: 1120px; border-collapse: collapse; text-align: left; }}
+        th, td {{ padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.92rem; vertical-align: middle; overflow-wrap: anywhere; }}
         th {{ background-color: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }}
         
         tr.clickable-row {{ cursor: pointer; transition: background-color 0.15s; }}
@@ -340,7 +340,8 @@ class DefectDrilldownReporter:
             justify-content: space-between;
             align-items: center;
         }}
-        .modal-title-wrap h2 {{ font-size: 1.35rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }}
+        .modal-title-wrap {{ min-width: 0; }}
+        .modal-title-wrap h2 {{ font-size: 1.35rem; font-weight: 700; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; overflow-wrap: anywhere; }}
         .modal-title-wrap p {{ color: #94A3B8; font-size: 0.85rem; margin-top: 4px; }}
         .modal-close-btn {{
             background: rgba(255,255,255,0.15);
@@ -421,9 +422,11 @@ class DefectDrilldownReporter:
         /* Modal Table Body */
         .modal-body {{
             flex: 1;
-            overflow-y: auto;
+            overflow: auto;
+            min-width: 0;
             padding: 0 28px 20px;
         }}
+        .issue-table {{ min-width: 1180px; table-layout: fixed; }}
         .issue-table th {{ position: sticky; top: 0; z-index: 10; background: #F1F5F9; font-size: 0.82rem; }}
         .issue-table td {{ font-size: 0.88rem; vertical-align: top; padding: 12px 14px; }}
         .badge-status {{

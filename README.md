@@ -74,6 +74,31 @@ Connects to MantisBT REST API, ingests live issues, and generates daily issues C
 cites-ops fetch-mantis --token "<YOUR_MANTIS_API_TOKEN>" --out-dir "new_ingest/2026-08-28"
 ```
 
+### 6. Generate the Standardized End-to-End Daily Pack
+
+The preferred workflow fetches MantisBT once, classifies and maps the resulting snapshot once, and publishes only the supported reports under an ISO-date directory:
+
+```bash
+cites-ops daily --date 2026-08-28 --input-dir "../tmp/input" --output-root "../tmp/output"
+```
+
+Expected inputs are `issue_teams.csv` and, when `MANTIS_API_TOKEN` is not set, an optional `token.txt`. The standard output is:
+
+```text
+../tmp/output/2026-08-28/
+  cites_status_2026-08-28.docx
+  cites_issues_2026-08-28.xlsx
+  cites_issues_2026-08-28.csv
+  cites_dashboard_2026-08-28.html
+  cites_issue_topics_2026-08-28.html
+  cites_defect_drilldown_2026-08-28.html
+  cites_weekly_resolutions_2026-08-28.html
+  manifest.json
+  run.log
+```
+
+Use `--reports status,issues_xlsx,dashboard` to create a subset, `--exclude weekly_resolutions` to omit reports, and `--overwrite` to explicitly replace an existing date directory. TLS certificate verification is enabled by default; `--insecure` is intended only for local development.
+
 ---
 
 ## ⚙️ Configuration (Zero Hardcoding)

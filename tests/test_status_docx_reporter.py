@@ -84,6 +84,15 @@ class TestStatusDocxReporter(unittest.TestCase):
         self.assertEqual(t1.cell(0, 0).text.strip(), "By Category")
         self.assertEqual(t1.cell(1, 0).text.strip(), "Annual_Accounts")
 
+        # Compact layout: no inherited paragraph gaps, smaller table type,
+        # wider category column, and reduced page margins.
+        category_para = t1.cell(1, 0).paragraphs[0]
+        self.assertEqual(category_para.paragraph_format.space_before.pt, 0)
+        self.assertEqual(category_para.paragraph_format.space_after.pt, 0)
+        self.assertEqual(category_para.runs[0].font.size.pt, 9)
+        self.assertGreater(t1.cell(1, 0).width.inches, t1.cell(1, 1).width.inches)
+        self.assertAlmostEqual(doc.sections[0].top_margin.inches, 0.55, places=2)
+
         # Check that it can also be parsed by StatsDocxParser
         parsed = StatsDocxParser.parse_file(out_path)
         self.assertIsNotNone(parsed)
