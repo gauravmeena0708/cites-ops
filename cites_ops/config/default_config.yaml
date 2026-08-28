@@ -9,11 +9,12 @@ aging_thresholds:
   aging_high_days: 30
 
 hierarchy:
-  # Hierarchy columns from teams.csv in top-down order
+  # Hierarchy columns from teams.csv in top-down order (JD -> DD -> AO/EO/DPA/Programmer -> Category)
   levels:
     - "JD(IS)"
     - "DD(IS)"
     - "Account handled by"
+    - "Category"
   team_column: "Team"
   issue_category_column: "Category"
   issue_status_column: "Status"
