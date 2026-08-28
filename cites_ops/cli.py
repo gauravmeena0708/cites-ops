@@ -1,6 +1,7 @@
 import argparse
+import os
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional, List
 import pandas as pd
@@ -19,16 +20,18 @@ from .reporters.html_reporter import HTMLReporter
 from .reporters.defect_drilldown_reporter import DefectDrilldownReporter
 from .reporters.interactive_topics_reporter import InteractiveTopicsReporter
 from .reporters.weekly_resolutions_reporter import WeeklyResolutionsReporter
+from .reporters.status_docx_reporter import StatusDocxReporter
+from .core.mantis_client import MantisClient
 
 def find_default_teams_file() -> Optional[Path]:
     """Look for standard teams mapping files in current working directory and common locations."""
     candidates = [
         Path("teams.csv"),
         Path("Issue_teams.csv"),
+        Path("config/teams.csv"),
+        Path("issues/teams.csv"),
         Path("issues/Issue_teams.csv"),
         Path("../issues/Issue_teams.csv"),
-        Path(r"C:\Users\IT\Downloads\CITES\teams.csv"),
-        Path(r"C:\Users\IT\Downloads\CITES\issues\Issue_teams.csv"),
     ]
     for cand in candidates:
         if cand.is_file():
@@ -38,7 +41,7 @@ def find_default_teams_file() -> Optional[Path]:
 def find_default_stats_files() -> List[Path]:
     """Look for standard stats DOCX files in issues/ or current working directory."""
     candidates = []
-    bases = [Path("."), Path("issues"), Path("archive"), Path(r"C:\Users\IT\Downloads\CITES"), Path(r"C:\Users\IT\Downloads\CITES\issues"), Path(r"C:\Users\IT\Downloads\CITES\archive")]
+    bases = [Path("."), Path("issues"), Path("archive"), Path("stats"), Path("new_ingest")]
     for base in bases:
         if base.is_dir():
             for f in base.rglob("*.docx"):
@@ -117,6 +120,23 @@ def main():
     cmd_reg.add_argument("--date", "-d", type=str, default=str(date.today()), help="Report snapshot date.")
     cmd_reg.add_argument("--rules", type=str, help="Optional custom rules.yaml path.")
 
+    # Command: fetch-mantis
+    cmd_mantis = subparsers.add_parser(
+        "fetch-mantis",
+        aliases=["mantis"],
+        help="Fetch issues from MantisBT REST API and generate daily issues CSV & Samadhan Setu Status DOCX."
+    )
+    cmd_mantis.add_argument("--token", "-t", type=str, default=os.getenv("MANTIS_API_TOKEN", ""), help="MantisBT API token (or set MANTIS_API_TOKEN env var).")
+    cmd_mantis.add_argument("--url", "-u", type=str, default="http://localhost:8080/mantisbt/api/rest", help="MantisBT REST API base URL.")
+    cmd_mantis.add_argument("--project", "-p", type=str, default=None, help="Optional project ID or name to filter (default: all accessible).")
+    cmd_mantis.add_argument("--date", "-d", type=str, default=str(date.today()), help="Report snapshot date (YYYY-MM-DD).")
+    cmd_mantis.add_argument("--out-dir", "-o", type=str, default=".", help="Directory to save generated CSV and DOCX outputs.")
+    cmd_mantis.add_argument("--csv", type=str, help="Optional explicit path for output issues CSV file.")
+    cmd_mantis.add_argument("--excel", "-x", type=str, help="Optional path for output formatted Excel workbook (.xlsx).")
+    cmd_mantis.add_argument("--docx", type=str, help="Optional explicit path for output Samadhan Setu Status DOCX file.")
+    cmd_mantis.add_argument("--prev-docx", type=str, help="Optional previous day's Samadhan Setu Status DOCX for difference calculation.")
+    cmd_mantis.add_argument("--classify", action="store_true", help="Also classify issues and enrich with aging metrics.")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -139,6 +159,8 @@ def main():
         run_weekly(args)
     elif args.command == "regional-pptx":
         run_regional_pptx(args)
+    elif args.command in ("fetch-mantis", "mantis"):
+        run_fetch_mantis(args)
 
 def run_classify(args):
     print(f"Reading {args.input_csv}...")
@@ -440,6 +462,88 @@ def run_regional_pptx(args):
         title="Regional Defect Diagnostics & Major Offices Review"
     )
     print(f"[OK] Light-Themed Regional Offices Presentation (.pptx) written to: {out_file}")
+
+def run_fetch_mantis(args):
+    print("=" * 60)
+    print("CITES Operations - MantisBT Intake & Daily Status Pack")
+    print("=" * 60)
+
+    # Determine report date
+    rep_date_str = args.date or str(date.today())
+    try:
+        rep_date_obj = datetime.strptime(rep_date_str, "%Y-%m-%d").date()
+    except Exception:
+        try:
+            rep_date_obj = datetime.strptime(rep_date_str, "%d-%m-%Y").date()
+        except Exception:
+            rep_date_obj = date.today()
+
+    rep_date_iso = rep_date_obj.strftime("%Y-%m-%d")
+    rep_date_dmy = rep_date_obj.strftime("%d-%m-%Y")
+
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    client = MantisClient(base_url=args.url, token=args.token)
+
+    print(f"[*] Connecting to MantisBT REST API at {client.base_url}...")
+    try:
+        user_info = client.test_connection()
+        print(f"[OK] Authenticated as: {user_info.get('name')} (ID: {user_info.get('id')})")
+    except Exception as e:
+        print(f"[!] Authentication warning: {e}")
+
+    print(f"[*] Fetching issues for project={args.project or 'ALL'}...")
+    raw_issues = client.fetch_issues(project_id=args.project)
+    df = MantisClient.to_dataframe(raw_issues)
+    print(f"[OK] Retrieved {len(df):,} issues via REST API.")
+
+    if df.empty:
+        print("[!] Warning: No issues found in MantisBT tracker.")
+
+    # 1. Generate Issues CSV
+    if args.csv:
+        csv_path = Path(args.csv)
+    else:
+        csv_path = out_dir / f"issues {rep_date_dmy}.csv"
+
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+    print(f"[OK] Issues CSV generated: {csv_path.resolve()} ({len(df):,} rows)")
+
+    # 2. Optional Formatted Excel
+    if args.excel:
+        xl_path = Path(args.excel)
+        ExcelReporter.generate_report(df, str(xl_path))
+        print(f"[OK] Issues Excel workbook generated: {xl_path.resolve()}")
+
+    # 3. Generate Samadhan Setu Status Word Document (.docx)
+    if args.docx:
+        docx_path = Path(args.docx)
+    else:
+        docx_path = out_dir / f"Samadhan Setu Status_{rep_date_dmy}.docx"
+
+    docx_path.parent.mkdir(parents=True, exist_ok=True)
+    StatusDocxReporter.generate_status_docx(
+        df=df,
+        output_path=docx_path,
+        report_date=rep_date_obj,
+        prev_stats_docx=args.prev_docx,
+    )
+    print(f"[OK] Samadhan Setu Status DOCX generated: {docx_path.resolve()}")
+
+    # 4. Optional Classification
+    if args.classify and not df.empty:
+        classifier = IssueClassifier()
+        df_classified = classifier.classify_dataframe(df)
+        df_enriched = IngestValidator.compute_aging(df_classified, as_of_date=rep_date_obj)
+        classified_csv_path = out_dir / f"classified_issues_{rep_date_iso}.csv"
+        df_enriched.to_csv(classified_csv_path, index=False, encoding="utf-8-sig")
+        print(f"[OK] Classified issues CSV generated: {classified_csv_path.resolve()}")
+
+    print("=" * 60)
+    print("Intake & Status generation complete.")
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()

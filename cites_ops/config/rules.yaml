@@ -230,7 +230,7 @@ rules:
     description: "A claim, task, request or case is missing, not routed, or not displayed in the Dealing Assistant (DA) login."
     priority: 90
     patterns:
-      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:da|dealing assistant)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+      - '(?i)^(?=.*?\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*?\b(?:da|dealing assistant)\b)(?=.*?(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
       - '(?i)\b(?:form[- ]?\d+[a-z]?|f\d+).{0,100}(?:not\s+(?:shown|showing|visible|available)|has\s+not\s+(?:shown|appeared|displayed)).{0,80}\b(?:da|dealing assistant)\b'
 
   - rule_id: "C02_VISIBILITY_SS"
@@ -240,7 +240,7 @@ rules:
     description: "A claim, task, request or case is missing, not routed, or not displayed in the Section Supervisor (SS) login."
     priority: 90
     patterns:
-      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:ss|section supervisor)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+      - '(?i)^(?=.*?\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*?\b(?:ss|section supervisor)\b)(?=.*?(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
 
   - rule_id: "C03A_VISIBILITY_AO_APFC"
     topic_key: "claim_not_visible_ao_apfc"
@@ -249,7 +249,7 @@ rules:
     description: "A claim, task, request or case is missing, not routed, or not displayed in an AO or APFC login."
     priority: 90
     patterns:
-      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:ao|apfc|accounts officer|assistant provident fund commissioner)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+      - '(?i)^(?=.*?\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*?\b(?:ao|apfc|accounts officer|assistant provident fund commissioner)\b)(?=.*?(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
 
   - rule_id: "C03B_VISIBILITY_RPFC_II"
     topic_key: "claim_not_visible_rpfc_ii"
@@ -258,7 +258,7 @@ rules:
     description: "A claim, task, request or case is missing, not routed, or not displayed in the RPFC-II login."
     priority: 91
     patterns:
-      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\brpfc[- ]?(?:ii|2)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+      - '(?i)^(?=.*?\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*?\brpfc[- ]?(?:ii|2)\b)(?=.*?(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
 
   - rule_id: "C03C_VISIBILITY_RPFC_I_APPROVER"
     topic_key: "claim_not_visible_rpfc_i_approver"
@@ -267,7 +267,7 @@ rules:
     description: "A claim, task, request or case is missing, not routed, or not displayed in an RPFC-I or other approver login."
     priority: 90
     patterns:
-      - '(?i)(?=.*\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*\b(?:rpfc(?:[- ]?(?:i|1))?|approver|approving officer|regional provident fund commissioner)\b)(?=.*(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
+      - '(?i)^(?=.*?\b(?:claims?|tasks?|requests?|applications?|cases?|pendency)\b)(?=.*?\b(?:rpfc(?:[- ]?(?:i|1))?|approver|approving officer|regional provident fund commissioner)\b)(?=.*?(?:not\s+(?:visible|showing|shown|show|displayed|appearing|reflecting|reflected|found|available|mapped|routed)|missing|unable\s+to\s+fetch))'
 
   - rule_id: "C04_VISIBILITY_OTHER"
     topic_key: "claim_not_visible_other"

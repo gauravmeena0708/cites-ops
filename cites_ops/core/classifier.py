@@ -50,25 +50,31 @@ class IssueClassifier:
         best_match = ""
 
         for rule in self.compiled_rules:
+            # Early break: remaining rules cannot beat best_score
+            if rule["priority"] + 20 <= best_score:
+                break
+
             for pattern in rule["patterns"]:
                 sum_match = pattern.search(summary_clean)
-                desc_match = pattern.search(desc_clean)
-                comb_match = pattern.search(combined_text) if not (sum_match or desc_match) else None
-
-                if not (sum_match or desc_match or comb_match):
-                    continue
-
-                # Score: base priority + bonus for summary match
-                score = rule["priority"] + (20 if sum_match else (2 if desc_match else 1))
-                if score > best_score:
-                    best_score = score
-                    best_rule = rule
-                    if sum_match:
+                if sum_match:
+                    score = rule["priority"] + 20
+                    if score > best_score:
+                        best_score = score
+                        best_rule = rule
                         best_match = sum_match.group(0)
-                    elif desc_match:
-                        best_match = desc_match.group(0)
-                    elif comb_match:
-                        best_match = comb_match.group(0)
+                        break
+
+            # Only search description if rule can still beat best_score
+            if (rule["priority"] + 2 > best_score) and (not best_rule or best_rule != rule):
+                for pattern in rule["patterns"]:
+                    desc_match = pattern.search(desc_clean)
+                    if desc_match:
+                        score = rule["priority"] + 2
+                        if score > best_score:
+                            best_score = score
+                            best_rule = rule
+                            best_match = desc_match.group(0)
+                            break
 
         if best_rule is None:
             # Fallback to last rule (C99_OTHER)

@@ -68,6 +68,12 @@ Analyzes open backlog distribution across organizational management levels:
 cites-ops workforce "issues/tracker.csv" "config/teams.csv"
 ```
 
+### 5. Fetch Live Issues from MantisBT & Generate Daily Status
+Connects to MantisBT REST API, ingests live issues, and generates daily issues CSV/Excel alongside the official **Samadhan Setu Status DOCX**:
+```bash
+cites-ops fetch-mantis --token "<YOUR_MANTIS_API_TOKEN>" --out-dir "new_ingest/2026-08-28"
+```
+
 ---
 
 ## ⚙️ Configuration (Zero Hardcoding)
