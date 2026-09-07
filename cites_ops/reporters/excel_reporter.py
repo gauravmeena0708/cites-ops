@@ -11,17 +11,17 @@ class ExcelReporter:
     formatted headers, KPI cards, category pivots, and full issue datasets.
     """
 
-    HEADER_FILL = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
-    SUBHEADER_FILL = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
-    HEADER_FONT = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    BOLD_FONT = Font(name="Calibri", size=11, bold=True)
-    REGULAR_FONT = Font(name="Calibri", size=11)
+    HEADER_FILL = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    SUBHEADER_FILL = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    HEADER_FONT = Font(name="Segoe UI", size=10, bold=True, color="1E293B")
+    BOLD_FONT = Font(name="Segoe UI", size=10, bold=True, color="1E293B")
+    REGULAR_FONT = Font(name="Segoe UI", size=10, color="0F172A")
     
     THIN_BORDER = Border(
-        left=Side(style="thin", color="D9D9D9"),
-        right=Side(style="thin", color="D9D9D9"),
-        top=Side(style="thin", color="D9D9D9"),
-        bottom=Side(style="thin", color="D9D9D9"),
+        left=Side(style="thin", color="E2E8F0"),
+        right=Side(style="thin", color="E2E8F0"),
+        top=Side(style="thin", color="E2E8F0"),
+        bottom=Side(style="thin", color="E2E8F0"),
     )
 
     @classmethod
@@ -59,7 +59,7 @@ class ExcelReporter:
         ws.views.sheetView[0].showGridLines = True
         ws.merge_cells("A1:E1")
         ws["A1"] = title
-        ws["A1"].font = Font(name="Calibri", size=16, bold=True, color="1F4E79")
+        ws["A1"].font = Font(name="Segoe UI", size=14, bold=True, color="111B3F")
         ws["A1"].alignment = Alignment(vertical="center")
 
         total = len(df)
@@ -112,6 +112,7 @@ class ExcelReporter:
     @classmethod
     def _build_category_sheet(cls, ws: openpyxl.worksheet.worksheet.Worksheet, df: pd.DataFrame) -> None:
         ws.views.sheetView[0].showGridLines = True
+        ws.freeze_panes = "A2"
         cols = ["major_topic_label", "topic_label", "rule_id"]
         avail_cols = [c for c in cols if c in df.columns]
 
@@ -135,10 +136,12 @@ class ExcelReporter:
                 cell.border = cls.THIN_BORDER
 
         cls._auto_fit_columns(ws)
+        ws.auto_filter.ref = ws.dimensions
 
     @classmethod
     def _build_issues_sheet(cls, ws: openpyxl.worksheet.worksheet.Worksheet, df: pd.DataFrame) -> None:
         ws.views.sheetView[0].showGridLines = True
+        ws.freeze_panes = "A2"
         # Select key columns to display cleanly
         pref_cols = [
             "Id", "Category", "Status", "Assigned To", "Date Submitted",
@@ -161,6 +164,7 @@ class ExcelReporter:
                 cell.border = cls.THIN_BORDER
 
         cls._auto_fit_columns(ws)
+        ws.auto_filter.ref = ws.dimensions
 
     @classmethod
     def _auto_fit_columns(cls, ws: openpyxl.worksheet.worksheet.Worksheet) -> None:

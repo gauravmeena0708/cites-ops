@@ -11,22 +11,53 @@ from pptx.enum.shapes import MSO_SHAPE
 class PPTXReporter:
     """
     Generates high-impact, light-themed executive PowerPoint slide decks (.pptx)
-    for CITES Operations, Workforce Accountability, and Root-Cause Defect Diagnostics.
+    for CITES Operations, Workforce Accountability, and Root-Cause Defect Diagnostics,
+    strictly aligned with the official EPFO Presentation Template standard.
     """
 
-    # Light Theme Color Palette
+    # EPFO Light Theme Color Palette
     COLOR_BG = RGBColor(248, 250, 252)          # Light Slate BG #F8FAFC
     COLOR_CARD_BG = RGBColor(255, 255, 255)     # White #FFFFFF
-    COLOR_NAVY = RGBColor(15, 41, 66)           # Deep Executive Navy #0F2942
+    COLOR_NAVY = RGBColor(17, 27, 63)           # Official EPFO Deep Navy #111B3F
     COLOR_PRIMARY = RGBColor(31, 78, 121)       # Primary Blue #1F4E79
     COLOR_HEADER_BG = RGBColor(235, 243, 250)   # Light Blue Header #EBF3FA
     COLOR_TEXT_MAIN = RGBColor(15, 23, 42)      # Charcoal Text #0F172A
-    COLOR_TEXT_MUTED = RGBColor(100, 116, 139)  # Muted Slate #64748B
+    COLOR_TEXT_MUTED = RGBColor(71, 85, 105)    # Muted Slate #475569
     COLOR_BORDER = RGBColor(226, 232, 240)      # Subtle Border #E2E8F0
     COLOR_RED = RGBColor(220, 38, 38)           # Alert Crimson #DC2626
-    COLOR_GREEN = RGBColor(22, 163, 74)         # Success Green #16A34A
-    COLOR_BLUE = RGBColor(37, 99, 235)          # Accent Blue #2563EB
+    COLOR_GREEN = RGBColor(5, 150, 105)         # Success Green #059669
+    COLOR_BLUE = RGBColor(29, 78, 216)          # Accent Trust Blue #1D4ED8
     COLOR_WHITE = RGBColor(255, 255, 255)
+
+    @classmethod
+    def _find_asset(cls, filename: str) -> Optional[Path]:
+        candidates = [
+            Path(__file__).resolve().parent.parent / "templates" / filename,
+            Path(__file__).resolve().parent / "templates" / filename,
+            Path("C:/Users/IT/Documents/GitHub/cites-ops/cites_ops/templates") / filename,
+            Path("C:/Users/IT/Downloads/CITES/templates") / filename,
+            Path("C:/Users/IT/Documents/GitHub/pf-ppt-templates/output") / filename,
+            Path("C:/Users/IT/Documents/GitHub/pf-ppt-templates/assets") / filename,
+        ]
+        for p in candidates:
+            if p.exists():
+                return p
+        return None
+
+    @classmethod
+    def _create_deck(cls) -> Presentation:
+        template_path = cls._find_asset("EPFO_Professional_Template.pptx")
+        if template_path and template_path.exists():
+            prs = Presentation(str(template_path))
+            while len(prs.slides) > 0:
+                rId = prs.slides._sldIdLst[0].rId
+                prs.part.drop_rel(rId)
+                del prs.slides._sldIdLst[0]
+        else:
+            prs = Presentation()
+            prs.slide_width = Inches(13.333)
+            prs.slide_height = Inches(7.5)
+        return prs
 
     @classmethod
     def generate_presentation(
@@ -40,119 +71,215 @@ class PPTXReporter:
         out_file = Path(output_path)
         out_file.parent.mkdir(parents=True, exist_ok=True)
 
-        prs = Presentation()
-        prs.slide_width = Inches(13.333)  # 16:9 Widescreen standard
-        prs.slide_height = Inches(7.5)
-
+        prs = cls._create_deck()
         run_date_str = str(report_date or date.today())
+        total_slides = 7
 
-        # Slide 1: Title Slide (Executive Light Theme)
+        # Slide 1: Title Slide (Cover Slide with official logo and Left Accent Rail)
         cls._add_title_slide(prs, title, run_date_str)
 
         # Slide 2: Executive Overview & Operational Health Dashboard
-        cls._add_kpi_slide(prs, df_classified, workload_data, run_date_str)
+        cls._add_kpi_slide(prs, df_classified, workload_data, run_date_str, total_slides)
 
         # Slide 3: Top 10 Major Problem Categories (Functionalities)
-        cls._add_top_categories_slide(prs, workload_data)
+        cls._add_top_categories_slide(prs, workload_data, run_date_str, total_slides)
 
         # Slide 4: System-Wide Top 10 Root-Cause Defect Drivers
-        cls._add_defect_drivers_slide(prs, workload_data, df_classified)
+        cls._add_defect_drivers_slide(prs, workload_data, df_classified, run_date_str, total_slides)
 
         # Slide 5: Leadership Accountability & Workload Distribution (JD / DD)
-        cls._add_leadership_slide(prs, workload_data)
+        cls._add_leadership_slide(prs, workload_data, run_date_str, total_slides)
 
         # Slide 6: Cross-Module Defect Heatmap & Topical Highlights
-        cls._add_cross_tab_slide(prs, workload_data)
+        cls._add_cross_tab_slide(prs, workload_data, run_date_str, total_slides)
 
         # Slide 7: Daily Aging Exceptions & Action Escalations
-        cls._add_aging_slide(prs, df_classified)
+        cls._add_aging_slide(prs, df_classified, run_date_str, total_slides)
 
         prs.save(out_file)
         return str(out_file)
 
     @classmethod
     def _create_blank_slide(cls, prs: Presentation):
-        slide = prs.slides.add_slide(prs.slide_layouts[6])
-        # Background shape
-        bg = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(7.5)
-        )
-        bg.fill.solid()
-        bg.fill.fore_color.rgb = cls.COLOR_BG
-        bg.line.fill.background()
+        if len(prs.slide_masters) > 0 and len(prs.slide_masters[0].slide_layouts) > 6:
+            slide = prs.slides.add_slide(prs.slide_masters[0].slide_layouts[6])
+        else:
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+        bg = slide.background
+        fill = bg.fill
+        fill.solid()
+        fill.fore_color.rgb = cls.COLOR_BG
         return slide
 
     @classmethod
-    def _add_slide_header(cls, slide, title: str, subtitle: str) -> None:
-        # Accent top bar
-        bar = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(0.45), Inches(0.4), Inches(0.06)
-        )
-        bar.fill.solid()
-        bar.fill.fore_color.rgb = cls.COLOR_BLUE
-        bar.line.fill.background()
+    def _add_slide_header(
+        cls,
+        slide,
+        title: str,
+        subtitle: str,
+        category_text: str = "CITES OPERATIONS INTELLIGENCE",
+        audience_pill: str = "DAILY BRIEFING",
+    ) -> None:
+        cat_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.88), Inches(7.5), Inches(0.20))
+        ctf = cat_box.text_frame
+        ctf.word_wrap = True
+        ctf.margin_left = ctf.margin_top = ctf.margin_right = ctf.margin_bottom = 0
+        p_cat = ctf.paragraphs[0]
+        p_cat.text = category_text.upper()
+        p_cat.font.name = "Segoe UI"
+        p_cat.font.size = Pt(9)
+        p_cat.font.bold = True
+        p_cat.font.color.rgb = cls.COLOR_BLUE
 
-        # Header Text
-        box = slide.shapes.add_textbox(Inches(0.8), Inches(0.55), Inches(11.733), Inches(0.9))
-        tf = box.text_frame
-        tf.word_wrap = True
-        tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+        title_box = slide.shapes.add_textbox(Inches(0.8), Inches(1.08), Inches(8.5), Inches(0.42))
+        ttf = title_box.text_frame
+        ttf.word_wrap = True
+        ttf.margin_left = ttf.margin_top = ttf.margin_right = ttf.margin_bottom = 0
+        p_title = ttf.paragraphs[0]
+        p_title.text = title
+        p_title.font.name = "Segoe UI"
+        p_title.font.size = Pt(17)
+        p_title.font.bold = True
+        p_title.font.color.rgb = cls.COLOR_NAVY
 
-        p = tf.paragraphs[0]
-        p.text = title
-        p.font.name = "Segoe UI"
-        p.font.size = Pt(22)
-        p.font.bold = True
-        p.font.color.rgb = cls.COLOR_NAVY
+        if audience_pill:
+            aud_box = slide.shapes.add_textbox(Inches(9.2), Inches(0.88), Inches(3.33), Inches(0.25))
+            atf = aud_box.text_frame
+            atf.margin_right = atf.margin_top = atf.margin_left = atf.margin_bottom = 0
+            ap = atf.paragraphs[0]
+            ap.alignment = PP_ALIGN.RIGHT
+            ap.text = audience_pill.upper()
+            ap.font.name = "Segoe UI"
+            ap.font.size = Pt(8.5)
+            ap.font.bold = True
+            ap.font.color.rgb = cls.COLOR_TEXT_MUTED
 
-        p_sub = tf.add_paragraph()
-        p_sub.text = subtitle
-        p_sub.font.name = "Segoe UI"
-        p_sub.font.size = Pt(11)
-        p_sub.font.color.rgb = cls.COLOR_TEXT_MUTED
+    @classmethod
+    def _add_slide_footer(cls, slide, data_through: str, slide_num: int, total_slides: int) -> None:
+        line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(6.90), Inches(11.733), Inches(0.015))
+        line.fill.solid()
+        line.fill.fore_color.rgb = cls.COLOR_BORDER
+        line.line.color.rgb = cls.COLOR_BORDER
+
+        meta_text = f"CITES Operations Monitoring  |  National Data Centre (NDC)  |  Data through {data_through}  |  Confidential"
+        footer_box = slide.shapes.add_textbox(Inches(0.8), Inches(6.98), Inches(9.5), Inches(0.3))
+        ftf = footer_box.text_frame
+        ftf.margin_left = ftf.margin_top = ftf.margin_right = ftf.margin_bottom = 0
+        fp = ftf.paragraphs[0]
+        fp.text = meta_text
+        fp.font.name = "Segoe UI"
+        fp.font.size = Pt(8.5)
+        fp.font.color.rgb = cls.COLOR_TEXT_MUTED
+
+        counter_box = slide.shapes.add_textbox(Inches(10.5), Inches(6.98), Inches(2.03), Inches(0.3))
+        ctf = counter_box.text_frame
+        ctf.margin_right = ctf.margin_top = ctf.margin_left = ctf.margin_bottom = 0
+        cp = ctf.paragraphs[0]
+        cp.alignment = PP_ALIGN.RIGHT
+        cp.text = f"SLIDE {slide_num} OF {total_slides}"
+        cp.font.name = "Segoe UI"
+        cp.font.size = Pt(9)
+        cp.font.bold = True
+        cp.font.color.rgb = cls.COLOR_TEXT_MUTED
 
     @classmethod
     def _add_title_slide(cls, prs: Presentation, title: str, date_str: str) -> None:
-        slide = cls._create_blank_slide(prs)
+        if len(prs.slide_masters) > 0 and len(prs.slide_masters[0].slide_layouts) > 6:
+            slide = prs.slides.add_slide(prs.slide_masters[0].slide_layouts[6])
+        else:
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.element.set('showMasterSp', '0')
 
-        # Decorative subtle card banner
-        card = slide.shapes.add_shape(
-            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.2), Inches(11.733), Inches(5.1)
-        )
-        card.fill.solid()
-        card.fill.fore_color.rgb = cls.COLOR_CARD_BG
-        card.line.color.rgb = cls.COLOR_BORDER
-        card.line.width = Pt(1)
+        bg = slide.background
+        fill = bg.fill
+        fill.solid()
+        fill.fore_color.rgb = cls.COLOR_BG
 
-        # Title Content Box
-        tx_box = slide.shapes.add_textbox(Inches(1.5), Inches(2.2), Inches(10.3), Inches(3.2))
-        tf = tx_box.text_frame
-        tf.word_wrap = True
+        # Left accent rail
+        rail = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(0.25), Inches(7.5))
+        rail.fill.solid()
+        rail.fill.fore_color.rgb = cls.COLOR_NAVY
+        rail.line.fill.background()
+
+        # Official EPFO Logo
+        logo_path = cls._find_asset("epfo_logo.png")
+        if logo_path and logo_path.exists():
+            slide.shapes.add_picture(str(logo_path), Inches(0.69), Inches(0.48), Inches(4.2), Inches(0.50))
 
         # Tag
-        p_tag = tf.paragraphs[0]
-        p_tag.text = "CITES OPERATIONS INTELLIGENCE & DECISION SUPPORT"
-        p_tag.font.name = "Segoe UI"
-        p_tag.font.size = Pt(12)
-        p_tag.font.bold = True
-        p_tag.font.color.rgb = cls.COLOR_BLUE
+        badge_box = slide.shapes.add_textbox(Inches(0.69), Inches(1.75), Inches(9.0), Inches(0.35))
+        btf = badge_box.text_frame
+        btf.word_wrap = True
+        btf.margin_left = btf.margin_top = btf.margin_right = btf.margin_bottom = 0
+        bp = btf.paragraphs[0]
+        bp.text = "CITES OPERATIONS INTELLIGENCE & DECISION SUPPORT"
+        bp.font.name = "Segoe UI"
+        bp.font.size = Pt(11)
+        bp.font.bold = True
+        bp.font.color.rgb = cls.COLOR_BLUE
 
         # Main Title
-        p_title = tf.add_paragraph()
-        p_title.text = title
-        p_title.font.name = "Segoe UI"
-        p_title.font.size = Pt(32)
-        p_title.font.bold = True
-        p_title.font.color.rgb = cls.COLOR_NAVY
-        p_title.space_before = Pt(8)
+        title_box = slide.shapes.add_textbox(Inches(0.69), Inches(2.20), Inches(11.5), Inches(1.5))
+        ttf = title_box.text_frame
+        ttf.word_wrap = True
+        ttf.margin_left = ttf.margin_top = ttf.margin_right = ttf.margin_bottom = 0
+        tp = ttf.paragraphs[0]
+        tp.text = title
+        tp.font.name = "Segoe UI"
+        tp.font.size = Pt(28)
+        tp.font.bold = True
+        tp.font.color.rgb = cls.COLOR_NAVY
 
         # Subtitle
-        p_sub = tf.add_paragraph()
-        p_sub.text = f"Functional Accountability, Workforce Distribution & Root-Cause Defect Diagnostics\nAs of Snapshot Date: {date_str}"
-        p_sub.font.name = "Segoe UI"
-        p_sub.font.size = Pt(16)
-        p_sub.font.color.rgb = cls.COLOR_TEXT_MUTED
-        p_sub.space_before = Pt(14)
+        sub_box = slide.shapes.add_textbox(Inches(0.69), Inches(3.90), Inches(11.5), Inches(1.2))
+        stf = sub_box.text_frame
+        stf.word_wrap = True
+        stf.margin_left = stf.margin_top = stf.margin_right = stf.margin_bottom = 0
+        sp = stf.paragraphs[0]
+        sp.text = f"Functional Accountability, Workforce Distribution & Root-Cause Defect Diagnostics\nAs of Snapshot Date: {date_str}"
+        sp.font.name = "Segoe UI"
+        sp.font.size = Pt(13.5)
+        sp.font.color.rgb = cls.COLOR_TEXT_MUTED
+
+        # Horizontal divider rule
+        line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.69), Inches(5.35), Inches(11.75), Inches(0.015))
+        line.fill.solid()
+        line.fill.fore_color.rgb = cls.COLOR_BORDER
+        line.line.color.rgb = cls.COLOR_BORDER
+
+        # Metadata Grid Card (Bottom)
+        meta_container = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.69), Inches(5.60), Inches(11.75), Inches(1.35))
+        meta_container.fill.solid()
+        meta_container.fill.fore_color.rgb = cls.COLOR_CARD_BG
+        meta_container.line.color.rgb = cls.COLOR_BORDER
+
+        metadata_items = [
+            ("Snapshot Date", date_str),
+            ("Jurisdiction", "National Data Centre (NDC)"),
+            ("Classification Standard", "rules.yaml Deterministic Taxonomy"),
+            ("Confidentiality", "Official / For Internal Review"),
+        ]
+        card_width = Inches(11.75) / max(1, len(metadata_items))
+        for i, (m_lbl, m_val) in enumerate(metadata_items):
+            cx = Inches(0.69) + (i * card_width) + Inches(0.2)
+            box = slide.shapes.add_textbox(cx, Inches(5.75), card_width - Inches(0.4), Inches(1.05))
+            tf = box.text_frame
+            tf.word_wrap = True
+            tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+            p1 = tf.paragraphs[0]
+            p1.text = m_lbl.upper()
+            p1.font.name = "Segoe UI"
+            p1.font.size = Pt(8.5)
+            p1.font.bold = True
+            p1.font.color.rgb = cls.COLOR_BLUE
+            p1.space_after = Pt(3)
+
+            p2 = tf.add_paragraph()
+            p2.text = str(m_val)
+            p2.font.name = "Segoe UI"
+            p2.font.size = Pt(11)
+            p2.font.bold = True
+            p2.font.color.rgb = cls.COLOR_TEXT_MAIN
 
     @classmethod
     def _add_kpi_slide(
@@ -161,9 +288,10 @@ class PPTXReporter:
         df: pd.DataFrame,
         workload_data: Optional[Dict[str, Any]],
         date_str: str,
+        total_slides: int = 7,
     ) -> None:
         slide = cls._create_blank_slide(prs)
-        cls._add_slide_header(slide, "Operational Health & Intake Overview", f"Snapshot Date: {date_str} · Overall Ingested Issue Portfolio")
+        cls._add_slide_header(slide, "Operational Health & Intake Overview", f"Snapshot Date: {date_str} · Overall Ingested Issue Portfolio", audience_pill="DAILY BRIEFING")
 
         total = len(df)
         status_series = df["Status"].astype(str).str.lower() if "Status" in df.columns else pd.Series([])
@@ -178,7 +306,6 @@ class PPTXReporter:
         field_cnt = routing.get("field_office", 0)
         cov_pct = wk_kpis.get("coverage_pct", "100.0%")
 
-        # 4 Primary KPI Cards
         kpis = [
             ("TOTAL INGESTED", f"{total:,}", "Issues across all 36 modules", cls.COLOR_NAVY),
             ("OPEN BACKLOG", f"{open_cnt:,}", "Requires active resolution", cls.COLOR_RED),
@@ -190,12 +317,10 @@ class PPTXReporter:
         card_w = 2.75
         gap = 0.24
         top = 1.65
-        card_h = 2.1
+        card_h = 2.05
 
         for idx, (label, val, subtext, col) in enumerate(kpis):
             x = Inches(left_start + idx * (card_w + gap))
-            
-            # Card Shape
             card = slide.shapes.add_shape(
                 MSO_SHAPE.ROUNDED_RECTANGLE, x, Inches(top), Inches(card_w), Inches(card_h)
             )
@@ -231,16 +356,15 @@ class PPTXReporter:
             p_sub.font.color.rgb = cls.COLOR_TEXT_MUTED
             p_sub.alignment = PP_ALIGN.CENTER
 
-        # Routing Distribution Box (Bottom Half)
         route_card = slide.shapes.add_shape(
-            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(4.0), Inches(11.733), Inches(2.8)
+            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(3.95), Inches(11.733), Inches(2.75)
         )
         route_card.fill.solid()
         route_card.fill.fore_color.rgb = cls.COLOR_CARD_BG
         route_card.line.color.rgb = cls.COLOR_BORDER
         route_card.line.width = Pt(1)
 
-        rt_box = slide.shapes.add_textbox(Inches(1.1), Inches(4.2), Inches(11.133), Inches(2.4))
+        rt_box = slide.shapes.add_textbox(Inches(1.1), Inches(4.10), Inches(11.133), Inches(2.45))
         rt_tf = rt_box.text_frame
         rt_tf.word_wrap = True
 
@@ -259,14 +383,22 @@ class PPTXReporter:
             f"• Key Insight: {round(100*epfo_cnt/total, 1)}% of operational volume is handled directly by internal IS teams, requiring focused defect triage at the DA/SS level."
         )
         p2.font.name = "Segoe UI"
-        p2.font.size = Pt(12)
+        p2.font.size = Pt(11.5)
         p2.font.color.rgb = cls.COLOR_TEXT_MAIN
         p2.space_before = Pt(8)
 
+        cls._add_slide_footer(slide, date_str, 2, total_slides)
+
     @classmethod
-    def _add_top_categories_slide(cls, prs: Presentation, workload_data: Optional[Dict[str, Any]]) -> None:
+    def _add_top_categories_slide(
+        cls,
+        prs: Presentation,
+        workload_data: Optional[Dict[str, Any]],
+        date_str: str = "",
+        total_slides: int = 7,
+    ) -> None:
         slide = cls._create_blank_slide(prs)
-        cls._add_slide_header(slide, "Top 10 Major Problem Categories (Functionalities)", "Ranked by Open Backlog Volume, Pendency Share & Accountable Leadership")
+        cls._add_slide_header(slide, "Top 10 Major Problem Categories (Functionalities)", "Ranked by Open Backlog Volume, Pendency Share & Accountable Leadership", audience_pill="FUNCTIONAL BACKLOG")
 
         top_10 = (workload_data or {}).get("top_10_categories", [])
         if not top_10:
@@ -274,7 +406,7 @@ class PPTXReporter:
 
         rows = len(top_10) + 1
         cols = 6
-        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(1.5), Inches(11.733), Inches(5.3))
+        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(1.60), Inches(11.733), Inches(5.10))
         table = table_shape.table
 
         table.columns[0].width = Inches(0.8)   # Rank
@@ -324,15 +456,19 @@ class PPTXReporter:
                     if col_idx in [0, 2, 3, 4]:
                         p.alignment = PP_ALIGN.CENTER
 
+        cls._add_slide_footer(slide, date_str, 3, total_slides)
+
     @classmethod
     def _add_defect_drivers_slide(
         cls,
         prs: Presentation,
         workload_data: Optional[Dict[str, Any]],
         df: pd.DataFrame,
+        date_str: str = "",
+        total_slides: int = 7,
     ) -> None:
         slide = cls._create_blank_slide(prs)
-        cls._add_slide_header(slide, "System-Wide Top 10 Root-Cause Defect Drivers", "Deterministic Root-Cause Analysis across all 5,086 Issue Tickets (rules.yaml)")
+        cls._add_slide_header(slide, "System-Wide Top 10 Root-Cause Defect Drivers", "Deterministic Root-Cause Analysis across all 5,086 Issue Tickets (rules.yaml)", audience_pill="DEFECT TAXONOMY")
 
         top_defects = (workload_data or {}).get("top_systemic_defects", [])
         if not top_defects:
@@ -340,7 +476,7 @@ class PPTXReporter:
 
         rows = len(top_defects) + 1
         cols = 5
-        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(1.5), Inches(11.733), Inches(5.3))
+        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(1.60), Inches(11.733), Inches(5.10))
         table = table_shape.table
 
         table.columns[0].width = Inches(1.4)   # Rule Code
@@ -393,10 +529,18 @@ class PPTXReporter:
                     if col_idx in [0, 2, 3, 4]:
                         p.alignment = PP_ALIGN.CENTER
 
+        cls._add_slide_footer(slide, date_str, 4, total_slides)
+
     @classmethod
-    def _add_leadership_slide(cls, prs: Presentation, workload_data: Optional[Dict[str, Any]]) -> None:
+    def _add_leadership_slide(
+        cls,
+        prs: Presentation,
+        workload_data: Optional[Dict[str, Any]],
+        date_str: str = "",
+        total_slides: int = 7,
+    ) -> None:
         slide = cls._create_blank_slide(prs)
-        cls._add_slide_header(slide, "Leadership Accountability & Workload Distribution", "Executive Workload & Resolution Metrics Grouped by JD(IS) Tier")
+        cls._add_slide_header(slide, "Leadership Accountability & Workload Distribution", "Executive Workload & Resolution Metrics Grouped by JD(IS) Tier", audience_pill="WORKFORCE TIERS")
 
         tree = (workload_data or {}).get("tree", [])
         if not tree:
@@ -404,7 +548,7 @@ class PPTXReporter:
 
         rows = len(tree) + 1
         cols = 5
-        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(1.5), Inches(11.733), Inches(5.3))
+        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(1.60), Inches(11.733), Inches(5.10))
         table = table_shape.table
 
         table.columns[0].width = Inches(3.8)   # JD(IS) Officer
@@ -457,20 +601,27 @@ class PPTXReporter:
                     if col_idx > 0:
                         p.alignment = PP_ALIGN.CENTER
 
+        cls._add_slide_footer(slide, date_str, 5, total_slides)
+
     @classmethod
-    def _add_cross_tab_slide(cls, prs: Presentation, workload_data: Optional[Dict[str, Any]]) -> None:
+    def _add_cross_tab_slide(
+        cls,
+        prs: Presentation,
+        workload_data: Optional[Dict[str, Any]],
+        date_str: str = "",
+        total_slides: int = 7,
+    ) -> None:
         slide = cls._create_blank_slide(prs)
-        cls._add_slide_header(slide, "Cross-Module Defect Heatmap & Topical Highlights", "Cross-Tabulation of Top Functional Modules against Major Problem Categories")
+        cls._add_slide_header(slide, "Cross-Module Defect Heatmap & Topical Highlights", "Cross-Tabulation of Top Functional Modules against Major Problem Categories", audience_pill="TOP MODULES")
 
         cat_summary = (workload_data or {}).get("category_summary", [])
         if not cat_summary:
             return
 
-        # 3 Structured Insight Cards
         card_w = 3.65
         gap = 0.35
-        card_h = 4.8
-        top = 1.6
+        card_h = 5.10
+        top = 1.60
 
         cards_data = [
             (
@@ -564,10 +715,18 @@ class PPTXReporter:
             p_rec.font.color.rgb = cls.COLOR_TEXT_MUTED
             p_rec.space_before = Pt(16)
 
+        cls._add_slide_footer(slide, date_str, 6, total_slides)
+
     @classmethod
-    def _add_aging_slide(cls, prs: Presentation, df: pd.DataFrame) -> None:
+    def _add_aging_slide(
+        cls,
+        prs: Presentation,
+        df: pd.DataFrame,
+        date_str: str = "",
+        total_slides: int = 7,
+    ) -> None:
         slide = cls._create_blank_slide(prs)
-        cls._add_slide_header(slide, "Daily Aging Exceptions & Escalation Register", "Prolonged Pendency Monitoring (> 7 Days and > 15 Days)")
+        cls._add_slide_header(slide, "Daily Aging Exceptions & Escalation Register", "Prolonged Pendency Monitoring (> 7 Days and > 15 Days)", audience_pill="AGING REGISTER")
 
         if "age_days" not in df.columns:
             return
@@ -575,8 +734,7 @@ class PPTXReporter:
         aging_7 = int((df["age_days"] >= 7).sum())
         aging_15 = int((df["age_days"] >= 15).sum())
 
-        # Top summary boxes
-        b1 = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.5), Inches(5.7), Inches(1.1))
+        b1 = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(1.60), Inches(5.7), Inches(1.00))
         b1.fill.solid()
         b1.fill.fore_color.rgb = cls.COLOR_CARD_BG
         b1.line.color.rgb = cls.COLOR_BORDER
@@ -588,7 +746,7 @@ class PPTXReporter:
         p1.font.bold = True
         p1.font.color.rgb = cls.COLOR_RED
 
-        b2 = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.8), Inches(1.5), Inches(5.7), Inches(1.1))
+        b2 = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.8), Inches(1.60), Inches(5.7), Inches(1.00))
         b2.fill.solid()
         b2.fill.fore_color.rgb = cls.COLOR_CARD_BG
         b2.line.color.rgb = cls.COLOR_BORDER
@@ -600,11 +758,10 @@ class PPTXReporter:
         p2.font.bold = True
         p2.font.color.rgb = cls.COLOR_RED
 
-        # Sample aging table
         aging_sample = df[df["age_days"] >= 7].sort_values(by="age_days", ascending=False).head(7)
         rows = len(aging_sample) + 1
         cols = 5
-        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(2.8), Inches(11.733), Inches(4.0))
+        table_shape = slide.shapes.add_table(rows, cols, Inches(0.8), Inches(2.75), Inches(11.733), Inches(3.95))
         table = table_shape.table
 
         table.columns[0].width = Inches(1.2)
@@ -652,3 +809,5 @@ class PPTXReporter:
                         p.font.color.rgb = cls.COLOR_TEXT_MAIN
                     if col_idx in [0, 1]:
                         p.alignment = PP_ALIGN.CENTER
+
+        cls._add_slide_footer(slide, date_str, 7, total_slides)

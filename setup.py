@@ -7,6 +7,10 @@ setup(
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_type="text/markdown",
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        "cites_ops": ["templates/*", "templates/**/*"],
+    },
     python_requires=">=3.9",
     install_requires=[
         "pandas>=2.0.0",
