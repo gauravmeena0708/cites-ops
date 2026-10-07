@@ -1,0 +1,211 @@
+[
+  {
+    "outputSlide": 1,
+    "sourceSlide": 1,
+    "reuseMode": "duplicate-slide",
+    "narrativeRole": "Title and scope",
+    "editTargets": [
+      {
+        "sourceElementId": "sh/7qp4be9c",
+        "shapeName": "TextBox 3",
+        "token": "{{TextBox_3_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/65g3298r",
+        "shapeName": "TextBox 4",
+        "token": "{{TextBox_4_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/ts7md4r2",
+        "shapeName": "TextBox 5",
+        "token": "{{TextBox_5_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/utg3698n",
+        "shapeName": "TextBox 8",
+        "token": "{{TextBox_8_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/utg3698n",
+        "shapeName": "TextBox 8",
+        "token": "{{TextBox_8_2}}",
+        "paragraph": 2
+      },
+      {
+        "sourceElementId": "sh/wn6dc7eh",
+        "shapeName": "TextBox 9",
+        "token": "{{TextBox_9_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/wn6dc7eh",
+        "shapeName": "TextBox 9",
+        "token": "{{TextBox_9_2}}",
+        "paragraph": 2
+      },
+      {
+        "sourceElementId": "sh/hofulsf2",
+        "shapeName": "TextBox 10",
+        "token": "{{TextBox_10_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/hofulsf2",
+        "shapeName": "TextBox 10",
+        "token": "{{TextBox_10_2}}",
+        "paragraph": 2
+      },
+      {
+        "sourceElementId": "sh/ul4vaxgb",
+        "shapeName": "TextBox 11",
+        "token": "{{TextBox_11_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/ul4vaxgb",
+        "shapeName": "TextBox 11",
+        "token": "{{TextBox_11_2}}",
+        "paragraph": 2
+      }
+    ]
+  },
+  {
+    "outputSlide": 2,
+    "sourceSlide": 3,
+    "reuseMode": "duplicate-slide",
+    "narrativeRole": "Ranked issue natures",
+    "editTargets": [
+      {
+        "sourceElementId": "sh/cza94vmx",
+        "shapeName": "TextBox 1",
+        "token": "{{TextBox_1_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/d0jax03i",
+        "shapeName": "TextBox 2",
+        "token": "{{TextBox_2_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/298ryl4v",
+        "shapeName": "TextBox 3",
+        "token": "{{TextBox_3_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "tb/u5o7algj",
+        "shapeName": "Table 4",
+        "operation": "replace table cells"
+      },
+      {
+        "sourceElementId": "sh/pcjqtg36",
+        "shapeName": "TextBox 6",
+        "token": "{{TextBox_6_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/m5cra54z",
+        "shapeName": "TextBox 7",
+        "token": "{{TextBox_7_1}}",
+        "paragraph": 1
+      }
+    ]
+  },
+  {
+    "outputSlide": 3,
+    "sourceSlide": 5,
+    "reuseMode": "duplicate-slide",
+    "narrativeRole": "Three ticket examples",
+    "editTargets": [
+      {
+        "sourceElementId": "sh/dgbulwnm",
+        "shapeName": "TextBox 1",
+        "token": "{{TextBox_1_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/cf2tcr61",
+        "shapeName": "TextBox 2",
+        "token": "{{TextBox_2_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/z2tcnm5s",
+        "shapeName": "TextBox 3",
+        "token": "{{TextBox_3_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/032tgr6d",
+        "shapeName": "TextBox 6",
+        "token": "{{TextBox_6_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/032tgr6d",
+        "shapeName": "TextBox 6",
+        "token": "{{TextBox_6_2}}",
+        "paragraph": 2
+      },
+      {
+        "sourceElementId": "sh/032tgr6d",
+        "shapeName": "TextBox 6",
+        "token": "{{TextBox_6_3}}",
+        "paragraph": 3
+      },
+      {
+        "sourceElementId": "sh/w32dkbuh",
+        "shapeName": "TextBox 9",
+        "token": "{{TextBox_9_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/w32dkbuh",
+        "shapeName": "TextBox 9",
+        "token": "{{TextBox_9_2}}",
+        "paragraph": 2
+      },
+      {
+        "sourceElementId": "sh/w32dkbuh",
+        "shapeName": "TextBox 9",
+        "token": "{{TextBox_9_3}}",
+        "paragraph": 3
+      },
+      {
+        "sourceElementId": "sh/v2twb6dw",
+        "shapeName": "TextBox 12",
+        "token": "{{TextBox_12_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/v2twb6dw",
+        "shapeName": "TextBox 12",
+        "token": "{{TextBox_12_2}}",
+        "paragraph": 2
+      },
+      {
+        "sourceElementId": "sh/v2twb6dw",
+        "shapeName": "TextBox 12",
+        "token": "{{TextBox_12_3}}",
+        "paragraph": 3
+      },
+      {
+        "sourceElementId": "sh/58vehgvy",
+        "shapeName": "TextBox 14",
+        "token": "{{TextBox_14_1}}",
+        "paragraph": 1
+      },
+      {
+        "sourceElementId": "sh/i54fmlc7",
+        "shapeName": "TextBox 15",
+        "token": "{{TextBox_15_1}}",
+        "paragraph": 1
+      }
+    ]
+  }
+]

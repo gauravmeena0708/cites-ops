@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "cites_ops": ["templates/*", "templates/**/*"],
+        "cites_ops": ["templates/*", "templates/**/*", "config/*.yaml"],
     },
     python_requires=">=3.9",
     install_requires=[

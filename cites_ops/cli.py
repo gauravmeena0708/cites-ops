@@ -59,6 +59,25 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
+    cmd_brief = subparsers.add_parser("brief", help="Preferred offline workflow: one functionality dashboard and Excel workbook, without external models.")
+    cmd_brief.add_argument("input_dir", help="Folder containing issue CSV, teams.csv and optional status DOCX.")
+    cmd_brief.add_argument("--date", "-d", help="Snapshot date YYYY-MM-DD; defaults to the input folder's ISO date or today.")
+    cmd_brief.add_argument("--output-root", "-o", default="reports/briefings", help="Root for YYYY-MM-DD output folders.")
+    cmd_brief.add_argument("--scope", choices=["auto", "all", "open", "partial"], default="auto", help="Use all only for a complete issue export. Auto recognizes open-only CSVs; mixed statuses require explicit scope.")
+    cmd_brief.add_argument("--issues", help="Explicit issue CSV when the folder contains several.")
+    cmd_brief.add_argument("--teams", help="Explicit ownership CSV.")
+    cmd_brief.add_argument("--stats", help="Status DOCX for the same date; counts must reconcile with the CSV.")
+    cmd_brief.add_argument("--no-stats", action="store_true", help="Use CSV counts without reading status DOCX files.")
+    cmd_brief.add_argument("--rules", help="Custom YAML issue-nature rules.")
+    cmd_brief.add_argument("--chats", nargs="+", help="Optional WhatsApp TXT/ZIP files or folders; generates review candidates.")
+    cmd_brief.add_argument("--chat-since", help="First announcement date YYYY-MM-DD; default is start of last calendar week.")
+    cmd_brief.add_argument("--chat-date-order", choices=["dmy", "mdy"], default="dmy", help="Date order in WhatsApp exports (default day/month/year).")
+    cmd_brief.add_argument("--overwrite", action="store_true", help="Replace an existing simplified briefing for this date.")
+    cmd_brief.add_argument("--top-n", type=int, choices=[10, 15], default=15, help="Number of issue natures in each Excel/PPT ranking (default 15).")
+    cmd_brief.add_argument("--ranking-period", choices=["all", "week"], default="all", help="Rank all supplied tickets or only tickets submitted last calendar week; current statuses in both modes.")
+    cmd_brief.add_argument("--no-pptx", action="store_true", help="Generate HTML and Excel without the two PowerPoint decks.")
+    cmd_brief.add_argument("--pptx-runtime", help="Local Node workspace containing @oai/artifact-tool; defaults to CITES_ARTIFACT_WORKSPACE or .cache/presentations.")
+
     # Command: classify
     cmd_classify = subparsers.add_parser("classify", help="Classify an issue tracker CSV into Major/Minor categories.")
     cmd_classify.add_argument("input_csv", type=str, help="Path to tracker CSV file.")
@@ -162,7 +181,9 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    if args.command == "classify":
+    if args.command == "brief":
+        run_brief_command(args)
+    elif args.command == "classify":
         run_classify(args)
     elif args.command == "chat-kb":
         run_chat_kb(args)
@@ -182,6 +203,30 @@ def main():
         run_fetch_mantis(args)
     elif args.command == "daily":
         run_daily(args)
+
+
+def run_brief_command(args):
+    from .brief import run_brief
+    try:
+        folder = Path(args.input_dir)
+        inferred_date = folder.name if len(folder.name) == 10 and folder.name[4:5] == "-" else None
+        report_date = parse_report_date(args.date or inferred_date)
+        output, manifest = run_brief(
+            folder, Path(args.output_root), report_date, scope=args.scope,
+            issues_file=args.issues, teams_file=args.teams, stats_file=args.stats,
+            no_stats=args.no_stats, rules_file=args.rules, chats=args.chats,
+            chat_since=parse_report_date(args.chat_since) if args.chat_since else None,
+            chat_date_order=args.chat_date_order, overwrite=args.overwrite,
+            top_n=args.top_n, ranking_period=args.ranking_period,
+            no_pptx=args.no_pptx, pptx_runtime=args.pptx_runtime,
+        )
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+    print(f"[OK] Simplified briefing: {output}")
+    print(f"[OK] {manifest['detail_counts']['total']:,} detailed tickets; {manifest['review_count']:,} need nature review")
+    for warning in manifest["warnings"]:
+        print(f"[NOTE] {warning}")
 
 
 def run_daily(args):

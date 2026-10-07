@@ -27,13 +27,16 @@ class ChatParser:
 
         lines: List[str] = []
         if path.suffix.lower() == ".zip":
+            frames = []
             with zipfile.ZipFile(path, "r") as zf:
                 for filename in zf.namelist():
-                    if filename.endswith(".txt") and not filename.startswith("__MACOSX"):
+                    if filename.lower().endswith(".txt") and not filename.startswith("__MACOSX"):
                         with zf.open(filename) as f:
                             text = f.read().decode("utf-8", errors="replace")
-                            lines.extend(text.splitlines())
-                        break
+                            frame = cls.parse_lines(text.splitlines())
+                            frame["source_file"] = filename
+                            frames.append(frame)
+            return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         else:
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 lines = f.read().splitlines()
@@ -66,7 +69,12 @@ class ChatParser:
                     matched = True
                     break
 
-            if not matched and current is not None:
+            if not matched and re.match(r"^\[?\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4},?\s+\d{1,2}:\d{2}", line_str):
+                # A timestamped system event is not continuation text from the last sender.
+                if current:
+                    records.append(current)
+                    current = None
+            elif not matched and current is not None:
                 # Multiline message continuation
                 current["message"] += "\n" + line_str
 

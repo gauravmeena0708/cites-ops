@@ -1,1 +1,2 @@
 recursive-include cites_ops/templates *
+recursive-include cites_ops/config *.yaml

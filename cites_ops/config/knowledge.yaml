@@ -1,0 +1,18 @@
+version: knowledge-1
+# Explicit announcements only. These produce review candidates, not verified fixes.
+types:
+  New functionality:
+    - '\b(?:new|additional)\s+(?:functionality|feature|option|module|facility)\b.{0,140}\b(?:deployed|released|enabled|introduced|available|developed|implemented)\b'
+    - '\b(?:deployed|released|enabled|introduced|developed|implemented)\b.{0,100}\b(?:new|additional)\s+(?:functionality|feature|option|module|facility)\b'
+  Reported fix:
+    - '\b(?:issue|problem|bug|defect|error)\b.{0,100}\b(?:resolved|fixed|corrected|rectified)\b'
+    - '\b(?:patch|fix)\b.{0,80}\b(?:deployed|released|applied|available)\b'
+  Workaround:
+    - '\bworkaround\b'
+    - '\b(?:follow|perform|use)\s+(?:these|the following)\s+steps\b'
+    - '\bas a temporary (?:measure|solution)\b'
+exclude:
+  - '\b(?:not|never)\s+(?:yet\s+)?(?:resolved|fixed|deployed|released|available|developed|implemented)\b'
+  - '\b(?:will|shall|should|would|can|could|may|might)\s+(?:be\s+)?(?:resolved|fixed|deployed|released|developed|implemented)\b'
+  - '\b(?:please|kindly)\s+(?:resolve|fix|deploy|release|develop|implement)\b'
+  - '\b(?:is|has|was)\b.{0,80}\b(?:issue|problem|bug|defect)\b.{0,60}\b(?:resolved|fixed)\b.*\?'

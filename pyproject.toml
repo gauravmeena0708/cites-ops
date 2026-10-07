@@ -31,3 +31,6 @@ cites-ops = "cites_ops.cli:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cites_ops*"]
+
+[tool.setuptools.package-data]
+cites_ops = ["config/*.yaml", "templates/*", "templates/**/*"]

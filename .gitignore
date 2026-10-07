@@ -28,12 +28,14 @@ output/
 archive/
 backups/
 extracted_logs/
+.cache/
 cites_ops_runtime/
 
 # Exception: allow example files
 !examples/*.csv
 !examples/*.txt
 !examples/*.yaml
+!cites_ops/templates/top_natures.pptx
 
 # IDEs
 .idea/

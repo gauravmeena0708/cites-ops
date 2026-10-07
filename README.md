@@ -1,5 +1,57 @@
 # CITES Operations Intelligence (`cites-ops`)
 
+## Preferred workflow: a simplified local briefing
+
+Use `brief` to turn a daily input folder into **one dashboard, one Excel workbook and two Top 15 PowerPoint decks**.
+It runs entirely on local Python/JavaScript code and YAML rules, without an LLM, external model,
+or network request. Reports use **Functionality → Issue Nature → Ticket**, with
+Open, Resolved and Closed kept separate.
+
+```powershell
+cites-ops brief "C:\path\to\new_ingest\2026-09-07" --scope open
+# For an export containing every ticket, including resolved and closed:
+cites-ops brief "C:\path\to\new_ingest\2026-09-07" --scope all
+```
+
+Inputs: an issue CSV, `teams.csv` (or `issue_teams.csv`), and an optional matching
+Samadhan Setu status DOCX. By default the output goes to:
+
+```text
+reports/briefings/2026-09-07/
+  dashboard_2026-09-07.html
+  issues_2026-09-07.xlsx
+  top_15_open_2026-09-07.pptx
+  top_15_resolved_closed_2026-09-07.pptx
+  _internal/                  # Counts/history, classification cache and run log
+```
+
+The workbook has **Functionality Summary**, **Issue Natures**, **Issue Details**,
+**Top Open Natures**, and **Top Resolved Closed**. The two decks use the CITES
+reference styling and show counts plus up to three distinct examples per nature.
+Use `--top-n 10` for Top 10 or `--ranking-period week` for last-week submissions.
+The dashboard uses the CITES navy palette and expandable functionality/nature or
+JD/DD/officer/functionality/nature views, with previous-week intake and searchable
+ticket details. Major/minor labels and technical rule keys
+are omitted from these reports.
+
+PPT rendering needs Node.js and a **locally installed `@oai/artifact-tool` runtime**.
+This workspace is configured at `.cache/presentations`. Elsewhere, pass
+`--pptx-runtime PATH` (or set `CITES_ARTIFACT_WORKSPACE`) to the local Node workspace
+containing that package. Use `--no-pptx` to run with Python only. See the guide below
+for setup. No runtime model account or API key is used.
+
+Optional WhatsApp exports generate a searchable `knowledge_base.html` of **review
+candidates** for new functionality, reported fixes and workarounds:
+
+```powershell
+cites-ops brief "C:\path\to\new_ingest\2026-09-07" --scope open `
+  --chats "C:\path\to\new_ingest\2026-08-31" --chat-since 2026-08-01
+```
+
+See [the simplified reporting guide](docs/SIMPLIFIED_REPORTING.md) for data coverage,
+weekly definitions, rule customization, output controls and limitations. Existing
+commands below remain available for older reporting workflows.
+
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -76,7 +128,7 @@ cites-ops fetch-mantis --token "<YOUR_MANTIS_API_TOKEN>" --out-dir "new_ingest/2
 
 ### 6. Generate the Standardized End-to-End Daily Pack
 
-The preferred workflow fetches MantisBT once, classifies and maps the resulting snapshot once, and publishes only the supported reports under an ISO-date directory:
+The legacy `daily` workflow fetches MantisBT once and publishes its larger report pack under an ISO-date directory. For the simplified offline pack, use `brief` above:
 
 ```bash
 cites-ops daily --date 2026-08-28 --input-dir "../tmp/input" --output-root "../tmp/output"

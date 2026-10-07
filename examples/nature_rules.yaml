@@ -1,0 +1,17 @@
+# Minimal standalone example. --rules replaces the default catalogue completely.
+version: example-natures-1
+rules:
+  - rule_id: TRANSFER_VISIBILITY
+    label: Transfer claim not visible at receiving office
+    priority: 100
+    functionalities: [Form-13]
+    patterns:
+      - 'claim.{0,60}not visible.{0,60}receiving office'
+      - 'receiving office.{0,60}claim.{0,60}(?:missing|not showing)'
+    exclude_patterns:
+      - 'claim is now visible'
+  - rule_id: SIGNING_FAILURE
+    label: Digital signing fails
+    priority: 80
+    patterns:
+      - '(?:dsc|esign|digital sign).{0,60}(?:failed|not working|error)'
